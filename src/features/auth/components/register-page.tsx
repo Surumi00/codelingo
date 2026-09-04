@@ -1,11 +1,12 @@
 import { FormEvent, useState } from 'react'
 import axios from 'axios'
+import characterImage from '../../../assets/characters/excited.png'
+import './register-page.css'
 
 const initialInput = {
   name: '',
   email: '',
   password: '',
-  confirmPassword: '',
 }
 
 type RegisterInput = typeof initialInput
@@ -26,10 +27,6 @@ function validate(input: RegisterInput): RegisterErrors {
     errors.password = 'Password is required.'
   } else if (input.password.length < 8) {
     errors.password = 'Password must be at least 8 characters.'
-  }
-
-  if (input.password !== input.confirmPassword) {
-    errors.confirmPassword = 'Passwords do not match.'
   }
 
   return errors
@@ -80,15 +77,24 @@ export function RegisterPage() {
     <main className="auth-page">
       <section className="auth-shell" aria-labelledby="register-title">
         <div className="auth-copy">
-          <p className="eyebrow">AI assisted coding practice</p>
-          <h1 id="register-title">Join CodeLingo</h1>
+          <img
+            src={characterImage}
+            alt="CodeLingo character"
+            className="auth-character"
+          />
+          <h1 id="register-title">Let's get<br />you set up.</h1>
           <p>
-            Build your programming streak and get guided explanations from the
-            AI coach when a lesson answer needs a nudge.
+            Just the basics for now. Right after this, we'll ask what you want
+            to learn and run a quick diagnostic.
           </p>
         </div>
 
         <form className="auth-card" onSubmit={handleSubmit} noValidate>
+          <div className="auth-heading">
+            <h2>Create your account</h2>
+            <p>Takes about a minute.</p>
+          </div>
+
           <label>
             Name
             <input
@@ -131,23 +137,7 @@ export function RegisterPage() {
             {errors.password ? <span className="field-error" id="password-error">{errors.password}</span> : null}
           </label>
 
-          <label>
-            Confirm password
-            <input
-              type="password"
-              name="confirmPassword"
-              value={input.confirmPassword}
-              onChange={inputHandler}
-              autoComplete="new-password"
-              aria-invalid={Boolean(errors.confirmPassword)}
-              aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
-            />
-            {errors.confirmPassword ? (
-              <span className="field-error" id="confirm-password-error">{errors.confirmPassword}</span>
-            ) : null}
-          </label>
-
-          <button type="submit">Create account</button>
+          <button type="submit">Continue →</button>
 
           {status ? <p className="form-status" role="status">{status}</p> : null}
 
