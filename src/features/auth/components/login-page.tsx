@@ -1,5 +1,7 @@
 import { FormEvent, useState } from 'react'
 import axios from 'axios'
+import characterImage from '../../../assets/characters/happy.png'
+import './login-page.css'
 
 export function LoginPage() {
 
@@ -38,7 +40,11 @@ export function LoginPage() {
       <section className="auth-shell" aria-labelledby="login-title">
 
         <div className="auth-copy">
-          <p className="eyebrow">AI assisted coding practice</p>
+          <img
+            src={characterImage}
+            alt="CodeLingo character"
+            className="auth-character"
+          />
 
           <h1 id="login-title">One language.<br />A real skill map.</h1>
 

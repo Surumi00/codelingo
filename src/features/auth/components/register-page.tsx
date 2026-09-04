@@ -1,5 +1,7 @@
 import { FormEvent, useState } from 'react'
 import axios from 'axios'
+import characterImage from '../../../assets/characters/excited.png'
+import './register-page.css'
 
 const initialInput = {
   name: '',
@@ -75,7 +77,11 @@ export function RegisterPage() {
     <main className="auth-page">
       <section className="auth-shell" aria-labelledby="register-title">
         <div className="auth-copy">
-          <p className="eyebrow">AI assisted coding practice</p>
+          <img
+            src={characterImage}
+            alt="CodeLingo character"
+            className="auth-character"
+          />
           <h1 id="register-title">Let's get<br />you set up.</h1>
           <p>
             Just the basics for now. Right after this, we'll ask what you want
