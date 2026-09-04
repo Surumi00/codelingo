@@ -10,7 +10,7 @@ export function LoginPage() {
 
   const [status, setStatus] = useState('')
 
-  const inputHandler = (event) => {
+  const inputHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInput({
       ...input,
       [event.target.name]: event.target.value
@@ -40,15 +40,20 @@ export function LoginPage() {
         <div className="auth-copy">
           <p className="eyebrow">AI assisted coding practice</p>
 
-          <h1 id="login-title">Log in to CodeLingo</h1>
+          <h1 id="login-title">One language.<br />A real skill map.</h1>
 
           <p>
-            Continue your programming streak and get guided explanations from
-            the AI coach when a lesson answer needs a nudge.
+            CodeLingo tracks exactly which concepts in your chosen language are
+            Weak, Developing, or Strong — starting with a quick diagnostic, not
+            a guess.
           </p>
         </div>
 
         <form className="auth-card" onSubmit={handleSubmit}>
+          <div className="auth-heading">
+            <h2>Welcome back</h2>
+            <p>Log in to continue your path.</p>
+          </div>
 
           <label>
             Email
@@ -75,14 +80,25 @@ export function LoginPage() {
           </label>
 
           <button type="submit">
-            Log in
+            Log in →
           </button>
+
+          <div className="auth-divider">OR CONTINUE WITH</div>
+
+          <div className="social-actions">
+            <button type="button">GitHub</button>
+            <button type="button">Google</button>
+          </div>
 
           {status ? (
             <p className="form-status" role="status">
               {status}
             </p>
           ) : null}
+
+          <p className="auth-link">
+            New here? <a href="/register">Create an account</a>
+          </p>
 
         </form>
 
