@@ -1,9 +1,11 @@
 import { FormEvent, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import axios from 'axios'
 import characterImage from '../../../assets/characters/happy.png'
 import './login-page.css'
 
 export function LoginPage() {
+  const navigate = useNavigate()
 
   const [input, setInput] = useState({
     email: '',
@@ -28,6 +30,8 @@ export function LoginPage() {
       .then((res) => {
         console.log(res.data)
         setStatus('Login successful!')
+        // Navigate to onboarding after successful login
+        navigate({ to: '/onboarding' })
       })
       .catch((error) => {
         console.log(error)
