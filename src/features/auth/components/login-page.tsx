@@ -30,6 +30,7 @@ export function LoginPage() {
       .then((res) => {
         console.log(res.data)
         setStatus('Login successful!')
+        localStorage.setItem('token', res.data.token)
         // Navigate to onboarding after successful login
         navigate({ to: '/onboarding' })
       })
