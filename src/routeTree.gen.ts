@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as TicketsDevRouteImport } from './routes/tickets-dev'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -23,40 +25,65 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TicketsDevRoute = TicketsDevRouteImport.update({
+  id: '/tickets-dev',
+  path: '/tickets-dev',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/tickets-dev': typeof TicketsDevRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/tickets-dev': typeof TicketsDevRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/tickets-dev': typeof TicketsDevRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/login' | '/onboarding' | '/register'
+  fullPaths:
+    '/login' | '/onboarding' | '/profile' | '/register' | '/tickets-dev'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/onboarding' | '/register'
-  id: '__root__' | '/login' | '/onboarding' | '/register'
+  to: '/login' | '/onboarding' | '/profile' | '/register' | '/tickets-dev'
+  id:
+    | '__root__'
+    | '/login'
+    | '/onboarding'
+    | '/profile'
+    | '/register'
+    | '/tickets-dev'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
+  ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
+  TicketsDevRoute: typeof TicketsDevRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -75,11 +102,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tickets-dev': {
+      id: '/tickets-dev'
+      path: '/tickets-dev'
+      fullPath: '/tickets-dev'
+      preLoaderRoute: typeof TicketsDevRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -88,7 +129,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
+  ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
+  TicketsDevRoute: TicketsDevRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
