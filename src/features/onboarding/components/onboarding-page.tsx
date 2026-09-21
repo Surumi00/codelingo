@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { onboardingData, type OnboardingStep } from '../data/onboarding-data'
-import happyCharacter from '../../../assets/characters/happy.png'
-import hiCharacter from '../../../assets/characters/hi.png'
+import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { onboardingData, type OnboardingStep } from "../../../mocks/onboarding-data";
+import happyCharacter from "../../../assets/characters/happy.png";
+import hiCharacter from "../../../assets/characters/hi.png";
 
 const characterAssets = {
   happy: happyCharacter,
@@ -14,7 +14,7 @@ export function OnboardingPage() {
   const [selectedLanguage, setSelectedLanguage] = useState('PY')
   const navigate = useNavigate()
 
-  const step: OnboardingStep = onboardingData[currentStep]
+    const step: OnboardingStep = onboardingData[currentStep];
 
   const getCharacterImage = (): string => characterAssets[step.image]
 
@@ -148,4 +148,3 @@ export function OnboardingPage() {
     </main>
   )
 }
-
