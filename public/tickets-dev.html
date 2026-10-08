@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CodeLingo — Week One Build Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf8f3;
+    --paper-raised: #ffffff;
+    --ink: #202b28;
+    --ink-soft: #56635e;
+    --ink-faint: #8b968f;
+    --line: #ded6c4;
+    --accent: #b97a24;
+    --accent-soft: #f4e6cf;
+    --teal: #2c6b5a;
+    --teal-soft: #e2efe9;
+    --backend: #7a4fae;
+    --backend-soft: #ece3f7;
+    --radius: 8px;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #17201d;
+      --paper-raised: #1e2925;
+      --ink: #ecebe4;
+      --ink-soft: #adb8b0;
+      --ink-faint: #74807a;
+      --line: #33403a;
+      --accent: #e0a850;
+      --accent-soft: #3a3221;
+      --teal: #6fbba3;
+      --teal-soft: #1c332c;
+      --backend: #b295dd;
+      --backend-soft: #2a2238;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #17201d;
+    --paper-raised: #1e2925;
+    --ink: #ecebe4;
+    --ink-soft: #adb8b0;
+    --ink-faint: #74807a;
+    --line: #33403a;
+    --accent: #e0a850;
+    --accent-soft: #3a3221;
+    --teal: #6fbba3;
+    --teal-soft: #1c332c;
+    --backend: #b295dd;
+    --backend-soft: #2a2238;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 84px); }
+  html, body { height: auto; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--teal); }
+  img { max-width: 100%; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    border-bottom: 1px solid var(--line);
+    padding: 56px 24px 40px;
+  }
+  .hero-inner { max-width: 760px; margin: 0 auto; }
+  .kicker {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--teal);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(30px, 5vw, 44px);
+    line-height: 1.12;
+    margin: 0 0 16px;
+    letter-spacing: -0.01em;
+  }
+  .dek {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 58ch;
+    margin: 0 0 28px;
+  }
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    max-width: 420px;
+  }
+  .progress-track-outer {
+    flex: 1;
+    height: 8px;
+    background: var(--line);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-track-inner {
+    height: 100%;
+    width: 0%;
+    background: var(--teal);
+    transition: width .35s ease;
+  }
+  #progressLabel {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  /* ---------- Layout ---------- */
+  .layout {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 40px 24px 100px;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; padding-top: 24px; }
+  }
+
+  nav.toc {
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + 24px);
+    font-size: 14px;
+  }
+  @media (max-width: 800px) {
+    nav.toc { position: static; }
+  }
+  nav.toc h2 {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: none;
+    color: var(--ink-faint);
+    margin: 0 0 10px;
+    font-weight: 500;
+  }
+  nav.toc ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  nav.toc a {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    text-decoration: none;
+    color: var(--ink-soft);
+    padding: 6px 8px;
+    border-radius: 6px;
+  }
+  nav.toc a:hover { background: var(--paper-raised); color: var(--ink); }
+  nav.toc .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink-faint);
+    flex: none;
+  }
+  nav.toc a.done .dot { background: var(--teal); border-color: var(--teal); }
+  nav.toc a.done { color: var(--ink-faint); text-decoration: line-through; }
+
+  /* ---------- Intro block ---------- */
+  .intro {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px 26px;
+    margin-bottom: 44px;
+  }
+  .intro h2 {
+    font-family: var(--serif);
+    font-size: 20px;
+    margin: 0 0 10px;
+  }
+  .intro p { color: var(--ink-soft); margin: 0 0 10px; }
+  .intro p:last-child { margin-bottom: 0; }
+  .intro strong { color: var(--ink); }
+
+  /* ---------- Ticket cards ---------- */
+  .ticket {
+    scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 90px);
+    border-top: 1px solid var(--line);
+    padding: 40px 0;
+  }
+  .ticket:first-of-type { border-top: none; padding-top: 0; }
+
+  .ticket-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 14px;
+  }
+  .ticket-num {
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 600;
+    color: var(--ink-faint);
+    line-height: 1;
+    min-width: 52px;
+  }
+  .ticket-head h3 {
+    font-family: var(--serif);
+    font-size: 23px;
+    margin: 0 0 8px;
+    line-height: 1.25;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 3px 9px;
+    border-radius: 99px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+  .tag.backend { background: var(--backend-soft); color: var(--backend); border-color: transparent; }
+  .tag.frontend { background: var(--teal-soft); color: var(--teal); border-color: transparent; }
+
+  .check {
+    margin-left: auto;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding-top: 4px;
+  }
+  .check input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .check .box {
+    width: 22px; height: 22px;
+    border: 1.5px solid var(--ink-faint);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, border-color .15s;
+  }
+  .check input:checked + .box {
+    background: var(--teal);
+    border-color: var(--teal);
+  }
+  .check .box svg { opacity: 0; width: 13px; height: 13px; }
+  .check input:checked + .box svg { opacity: 1; }
+  .check input:focus-visible + .box { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .check .label { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); }
+
+  .plain {
+    font-size: 17px;
+    max-width: 66ch;
+    margin: 0 0 10px;
+  }
+  .why {
+    color: var(--ink-soft);
+    max-width: 66ch;
+    margin: 0 0 22px;
+    padding-left: 14px;
+    border-left: 2px solid var(--accent-soft);
+  }
+
+  .spec-grid {
+    display: grid;
+    gap: 20px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+  }
+  .spec-block h4 {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin: 0 0 8px;
+  }
+  .spec-block p { margin: 0; color: var(--ink); }
+  .filelist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .filelist code {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  ul.dod {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  ul.dod li {
+    padding-left: 24px;
+    position: relative;
+  }
+  ul.dod li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 5px;
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--teal);
+    border-radius: 4px;
+  }
+  .verify {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.6;
+  }
+  :root[data-theme="dark"] .verify,
+  @media (prefers-color-scheme: dark) { .verify { background: #0e1512; } }
+
+  footer {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    color: var(--ink-faint);
+    font-size: 13px;
+  }
+  footer .layout-pad { max-width: 760px; margin-left: 244px; }
+  @media (max-width: 800px) { footer .layout-pad { margin-left: 0; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="kicker">CodeLingo · sprint documentation</p>
+    <h1>Onboarding, diagnostic, and syllabus placement</h1>
+    <p class="dek">Ten tickets that take a user from login to a personal Python starting point: a few questions about them, a 15-question test, an AI-written review, and a level to begin at. Written so either of you can pick up any ticket cold.</p>
+    <div class="progress-wrap">
+      <div class="progress-track-outer"><div class="progress-track-inner" id="progressFill"></div></div>
+      <span id="progressLabel">0 of 10 done</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc" id="toc">
+    <h2>On this page</h2>
+    <ol id="tocList">
+      <li><a href="#syl-1" data-id="syl-1"><span class="dot"></span>Syllabus tables + seed</a></li>
+      <li><a href="#syl-2" data-id="syl-2"><span class="dot"></span>Diagnostic question bank</a></li>
+      <li><a href="#syl-3" data-id="syl-3"><span class="dot"></span>Onboarding fields</a></li>
+      <li><a href="#syl-4" data-id="syl-4"><span class="dot"></span>Diagnostic endpoints</a></li>
+      <li><a href="#syl-5" data-id="syl-5"><span class="dot"></span>AI review service</a></li>
+      <li><a href="#syl-6" data-id="syl-6"><span class="dot"></span>Onboarding screens</a></li>
+      <li><a href="#syl-7" data-id="syl-7"><span class="dot"></span>Diagnostic player</a></li>
+      <li><a href="#syl-8" data-id="syl-8"><span class="dot"></span>Results screen</a></li>
+      <li><a href="#syl-9" data-id="syl-9"><span class="dot"></span>Syllabus browse page</a></li>
+      <li><a href="#syl-10" data-id="syl-10"><span class="dot"></span>Wire it all together</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <section class="intro">
+      <h2>How to use this</h2>
+      <p><strong>The order matters less than the dependencies.</strong> Tickets 1, 2, 3, 5, 6 and 7 don't depend on anything else — start any of those on day one. Ticket 4 needs 1 and 2 finished first. Ticket 8 needs 7. Ticket 9 needs 1. Ticket 10 is last — it's the one that connects everything to the real backend instead of placeholder data.</p>
+      <p>Each ticket below has the same shape: <strong>what you're building</strong> in plain language, <strong>why it exists</strong>, then the technical spec — files, implementation notes, a definition of done, and a command or step to prove it works.</p>
+      <p>Tick the checkbox on a ticket once it's done. Your progress is saved on this device.</p>
+    </section>
+
+    <!-- SYL-1 -->
+    <article class="ticket" id="syl-1">
+      <div class="ticket-head">
+        <span class="ticket-num">01</span>
+        <div style="flex:1">
+          <h3>Syllabus tables and seed the Python syllabus</h3>
+          <div class="tags">
+            <span class="tag backend">Backend</span>
+            <span class="tag">4h</span>
+            <span class="tag">Depends on: none</span>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" data-id="syl-1">
+          <span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </label>
+      </div>
+      <p class="plain">Before a user can be "placed" into a syllabus, a syllabus has to exist in the database. This ticket builds the two tables that hold it: one for the big levels (Beginner, Elementary, Intermediate, Advanced) and one for the topics inside each level.</p>
+      <p class="why">Everything else this week — the diagnostic result, the results screen, the browse page — points at these rows. Build this first.</p>
+      <div class="spec-grid">
+        <div class="spec-block">
+          <h4>Files you'll touch</h4>
+          <ul class="filelist">
+            <li><code>src/db/schema.ts</code></li>
+            <li><code>drizzle/</code> (auto-generated by the migration command)</li>
+            <li><code>src/db/seed-syllabus.ts</code> (new)</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to build it</h4>
+          <p>Add two tables. <code style="font-family:var(--mono);font-size:13px">syllabus_levels</code>: id, order, title, description. <code style="font-family:var(--mono);font-size:13px">syllabus_topics</code>: id, levelId (points at a level), order, title, blurb, conceptSlug. Seed four levels — Beginner, Elementary, Intermediate, Advanced — and spread your six existing concepts (variables-and-types, control-flow, functions, data-structures, oop, exception-handling) across them in a sensible order. Follow the same id and timestamp style already used elsewhere in the schema.</p>
+        </div>
+        <div class="spec-block">
+          <h4>Definition of done</h4>
+          <ul class="dod">
+            <li>The migration runs cleanly and both tables show up with data in them.</li>
+            <li>Every topic points at a level that actually exists.</li>
+            <li>Running the seed script twice doesn't create duplicate rows.</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to check your work</h4>
+          <div class="verify">npm run db:migrate && npm run db:seed:syllabus && npm run db:studio</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SYL-2 -->
+    <article class="ticket" id="syl-2">
+      <div class="ticket-head">
+        <span class="ticket-num">02</span>
+        <div style="flex:1">
+          <h3>Diagnostic question bank: schema and 15 seeded questions</h3>
+          <div class="tags">
+            <span class="tag backend">Backend</span>
+            <span class="tag">3h</span>
+            <span class="tag">Depends on: none</span>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" data-id="syl-2">
+          <span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </label>
+      </div>
+      <p class="plain">This is the actual 15-question test. It's written by hand and stored in the database — not generated live — so the test never breaks because an AI service is slow or down.</p>
+      <p class="why">A test that depends on a third-party API to even load is a fragile thing to demo in front of an examiner. This one doesn't.</p>
+      <div class="spec-grid">
+        <div class="spec-block">
+          <h4>Files you'll touch</h4>
+          <ul class="filelist">
+            <li><code>src/db/schema.ts</code></li>
+            <li><code>src/db/seed-diagnostic.ts</code> (new)</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to build it</h4>
+          <p>One table, <code style="font-family:var(--mono);font-size:13px">diagnostic_questions</code>: id, conceptSlug, difficulty, prompt, options (a list of 4 choices), correctOptionIndex, explanation. Write 15 multiple-choice questions spread across the six concepts — two or three questions per concept, mixing easy and harder ones. Code-writing questions can come later; keep this batch to multiple choice so it's fast to build and fast to grade.</p>
+        </div>
+        <div class="spec-block">
+          <h4>Definition of done</h4>
+          <ul class="dod">
+            <li>Exactly 15 questions are seeded.</li>
+            <li>Every correctOptionIndex points at a real option (0 to 3).</li>
+            <li>Every one of the six concepts has at least one question.</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to check your work</h4>
+          <div class="verify">npm run db:seed:diagnostic && npm run db:studio</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SYL-3 -->
+    <article class="ticket" id="syl-3">
+      <div class="ticket-head">
+        <span class="ticket-num">03</span>
+        <div style="flex:1">
+          <h3>Extend onboarding: occupation, experience, language</h3>
+          <div class="tags">
+            <span class="tag backend">Backend</span>
+            <span class="tag">2h</span>
+            <span class="tag">Depends on: none</span>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" data-id="syl-3">
+          <span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </label>
+      </div>
+      <p class="plain">Before the diagnostic test starts, the app asks a user what they do, how experienced they are, and what they want to learn. This ticket is the backend side: where those three answers get saved.</p>
+      <p class="why">The frontend screens in ticket 6 need somewhere real to send this data. Build the landing spot first so that work isn't blocked.</p>
+      <div class="spec-grid">
+        <div class="spec-block">
+          <h4>Files you'll touch</h4>
+          <ul class="filelist">
+            <li><code>src/db/schema.ts</code> (users table, or a new user_profile table)</li>
+            <li><code>src/controllers/meController.ts</code></li>
+            <li><code>src/routes/meRoutes.ts</code></li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to build it</h4>
+          <p>Add three fields: occupation (plain text), experienceLevel (a fixed set of options — for example Student, Beginner, Some Experience, Experienced), and language (already exists as an enum — for now the only accepted value is Python). Extend the existing <code style="font-family:var(--mono);font-size:13px">POST /me/onboarding</code> endpoint to accept and save all three at once.</p>
+        </div>
+        <div class="spec-block">
+          <h4>Definition of done</h4>
+          <ul class="dod">
+            <li>Sending all three fields saves them, and fetching the current user shows them back.</li>
+            <li>Sending an invalid experience level or a non-Python language is rejected with a clear error.</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to check your work</h4>
+          <div class="verify">curl -X POST :3000/me/onboarding \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"occupation":"student","experienceLevel":"BEGINNER","language":"PYTHON"}'</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SYL-4 -->
+    <article class="ticket" id="syl-4">
+      <div class="ticket-head">
+        <span class="ticket-num">04</span>
+        <div style="flex:1">
+          <h3>Diagnostic endpoints: serve, grade, and place</h3>
+          <div class="tags">
+            <span class="tag backend">Backend</span>
+            <span class="tag">5h</span>
+            <span class="tag">Depends on: 01, 02</span>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" data-id="syl-4">
+          <span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </label>
+      </div>
+      <p class="plain">This is the engine room. One endpoint hands out all 15 questions. Another accepts the user's answers all at once, grades them, works out a level, writes it to the database, and tells the frontend where in the syllabus to start.</p>
+      <p class="why">Everything the user sees on the results screen and the syllabus page comes out of this one ticket.</p>
+      <div class="spec-grid">
+        <div class="spec-block">
+          <h4>Files you'll touch</h4>
+          <ul class="filelist">
+            <li><code>src/routes/diagnosticRoutes.ts</code> (new)</li>
+            <li><code>src/controllers/diagnosticController.ts</code> (new)</li>
+            <li><code>src/services/placementService.ts</code> (new)</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to build it</h4>
+          <p><code style="font-family:var(--mono);font-size:13px">GET /diagnostic/questions</code> returns all 15 questions — never the correct answers. <code style="font-family:var(--mono);font-size:13px">POST /diagnostic/submit</code> takes the user's answers, grades them against the stored answer key, works out a score out of 15, and picks a level from that score (for example: under 40% Beginner, under 60% Elementary, under 80% Intermediate, otherwise Advanced). It saves an attempt row and calls the AI review service from ticket 5 to write the review text — if that call fails, it must still return a result using the fallback review, never an error. The response includes the score, the level, the review text, which syllabus level to start at, and a breakdown by concept.</p>
+        </div>
+        <div class="spec-block">
+          <h4>Definition of done</h4>
+          <ul class="dod">
+            <li>The questions endpoint returns exactly 15 questions with no answer key visible.</li>
+            <li>A perfect score lands on the top level; a zero score lands on the bottom one.</li>
+            <li>The suggested starting syllabus level always points at a real row.</li>
+            <li>Submitting still works and returns a result even if the AI service is unreachable.</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to check your work</h4>
+          <div class="verify">curl :3000/diagnostic/questions -H "Authorization: Bearer $TOKEN"
+# then answer them and post to /diagnostic/submit, try both a strong
+# and a weak set of answers, and try it with the AI key removed</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SYL-5 -->
+    <article class="ticket" id="syl-5">
+      <div class="ticket-head">
+        <span class="ticket-num">05</span>
+        <div style="flex:1">
+          <h3>AI review service, with a fallback that never fails</h3>
+          <div class="tags">
+            <span class="tag backend">Backend</span>
+            <span class="tag">4h</span>
+            <span class="tag">Depends on: none</span>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" data-id="syl-5">
+          <span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </label>
+      </div>
+      <p class="plain">This writes the two or three sentences of feedback the user reads after the test — something like "you're strong in functions, work on exception handling." It's a separate piece from ticket 4 so it can be tested on its own before it's wired in.</p>
+      <p class="why">Free-tier AI APIs get rate-limited or slow sometimes. If this ticket only had the AI path, one bad API response could sink a live demo. The fallback text is not a nice-to-have — treat it as equally important as the AI path.</p>
+      <div class="spec-grid">
+        <div class="spec-block">
+          <h4>Files you'll touch</h4>
+          <ul class="filelist">
+            <li><code>src/services/reviewService.ts</code> (new)</li>
+            <li><code>.env.example</code></li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to build it</h4>
+          <p>One function, <code style="font-family:var(--mono);font-size:13px">generateReview(score, breakdown, level)</code>. It calls whichever free-tier AI provider you're using, asking for a short 2-3 sentence review that names one concept the user did well on and one they should practice, based on the breakdown. Give the call a short timeout (5-8 seconds). If it errors, times out, or the key isn't set, fall back to a template built directly from the breakdown data — for example "You're strongest in {topConcept} and could use more practice with {weakConcept}." That fallback path has to work with zero network calls.</p>
+        </div>
+        <div class="spec-block">
+          <h4>Definition of done</h4>
+          <ul class="dod">
+            <li>With a working API key, the review mentions a real concept from the breakdown.</li>
+            <li>With the key removed or invalid, a review still comes back — no crash, no empty response.</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to check your work</h4>
+          <div class="verify">// call generateReview() directly with a sample breakdown,
+// once with a valid key and once with the key blanked out</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SYL-6 -->
+    <article class="ticket" id="syl-6">
+      <div class="ticket-head">
+        <span class="ticket-num">06</span>
+        <div style="flex:1">
+          <h3>Onboarding: the personal-question screens</h3>
+          <div class="tags">
+            <span class="tag frontend">Frontend</span>
+            <span class="tag">4h</span>
+            <span class="tag">Depends on: none to start</span>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" data-id="syl-6">
+          <span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </label>
+      </div>
+      <p class="plain">Right after signup, before the test, the user answers a couple of quick questions about themselves: what they do, how much coding experience they have, and what they want to learn.</p>
+      <p class="why">This is the user's first real impression of the product after login — it should feel quick and friendly, not like filling out a form.</p>
+      <div class="spec-grid">
+        <div class="spec-block">
+          <h4>Files you'll touch</h4>
+          <ul class="filelist">
+            <li><code>src/features/onboarding/components/onboarding-page.tsx</code></li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to build it</h4>
+          <p>Add two new screens before the existing language-pick step: one for occupation (a short pick-list is friendlier than a text box — student, professional, hobbyist), one for experience level (a set of selectable cards). Keep the mascot and progress-dot style already used on the other onboarding screens. Hold all the answers in local state and send them together in one request when the user hits "Start" at the end — don't build a separate network call for each screen.</p>
+        </div>
+        <div class="spec-block">
+          <h4>Definition of done</h4>
+          <ul class="dod">
+            <li>Every new screen renders and stops the user from continuing until it's answered.</li>
+            <li>The final submit sends occupation, experience level, and language together, in one request.</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to check your work</h4>
+          <div class="verify">npm run dev
+# walk through onboarding in the browser, check the Network tab
+# for a single request carrying all three answers</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SYL-7 -->
+    <article class="ticket" id="syl-7">
+      <div class="ticket-head">
+        <span class="ticket-num">07</span>
+        <div style="flex:1">
+          <h3>The 15-question diagnostic player</h3>
+          <div class="tags">
+            <span class="tag frontend">Frontend</span>
+            <span class="tag">5h</span>
+            <span class="tag">Depends on: none to start</span>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" data-id="syl-7">
+          <span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </label>
+      </div>
+      <p class="plain">The actual test screen. It shows one question at a time out of 15, with a visible sense of progress, and only sends everything to the server once, at the very end.</p>
+      <p class="why">This is the screen the user spends the most time on. It should feel calm and clear — no surprises about how many questions are left.</p>
+      <div class="spec-grid">
+        <div class="spec-block">
+          <h4>Files you'll touch</h4>
+          <ul class="filelist">
+            <li><code>src/features/diagnostic/</code> (new folder — components, mock data)</li>
+            <li><code>src/routes/diagnostic.tsx</code> (new)</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to build it</h4>
+          <p>Start with a small set of mock questions so this can be built before the backend endpoint (ticket 4) is ready — swap the mock for the real API call in ticket 10. Show one question at a time, a progress indicator like "6 of 15", and collect every answer in local state as the user goes. Only send everything to the server in one batch when they finish the last question, rather than a network call after each answer.</p>
+        </div>
+        <div class="spec-block">
+          <h4>Definition of done</h4>
+          <ul class="dod">
+            <li>All 15 questions display in order with a visible progress indicator.</li>
+            <li>The final submit sends every answer in a single request.</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to check your work</h4>
+          <div class="verify">npm run dev
+# walk through all 15 questions in the browser</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SYL-8 -->
+    <article class="ticket" id="syl-8">
+      <div class="ticket-head">
+        <span class="ticket-num">08</span>
+        <div style="flex:1">
+          <h3>The results and review screen</h3>
+          <div class="tags">
+            <span class="tag frontend">Frontend</span>
+            <span class="tag">3h</span>
+            <span class="tag">Depends on: 07</span>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" data-id="syl-8">
+          <span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </label>
+      </div>
+      <p class="plain">Right after the test, the user sees their score, their assigned level, the AI-written review, and a button that drops them into the syllabus at the right starting point.</p>
+      <p class="why">This is the payoff moment — where "I just answered some questions" turns into "here's what I should learn next." Worth making it feel a little rewarding.</p>
+      <div class="spec-grid">
+        <div class="spec-block">
+          <h4>Files you'll touch</h4>
+          <ul class="filelist">
+            <li><code>src/features/diagnostic/components/results-page.tsx</code> (new)</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to build it</h4>
+          <p>Show the score, a level badge, the review text, and a simple per-concept breakdown (reuse whatever chip or list styling already exists on the profile page). One "Start learning" button that takes the user into the syllabus browse page, pre-selecting the level the test recommended.</p>
+        </div>
+        <div class="spec-block">
+          <h4>Definition of done</h4>
+          <ul class="dod">
+            <li>Every field from the submit response is visible on screen.</li>
+            <li>The button lands on the syllabus page with the right level pre-selected.</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to check your work</h4>
+          <div class="verify">// finish a diagnostic run and confirm this screen matches
+// exactly what /diagnostic/submit returned</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SYL-9 -->
+    <article class="ticket" id="syl-9">
+      <div class="ticket-head">
+        <span class="ticket-num">09</span>
+        <div style="flex:1">
+          <h3>Syllabus browse page</h3>
+          <div class="tags">
+            <span class="tag frontend">Frontend</span>
+            <span class="tag">4h</span>
+            <span class="tag">Depends on: 01</span>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" data-id="syl-9">
+          <span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </label>
+      </div>
+      <p class="plain">The diagnostic result is a starting point, not a cage — the user should be able to look at every level of the syllabus, not just the one they were placed into.</p>
+      <p class="why">People learn at different speeds. Locking someone to exactly one level would feel restrictive and isn't what was asked for.</p>
+      <div class="spec-grid">
+        <div class="spec-block">
+          <h4>Files you'll touch</h4>
+          <ul class="filelist">
+            <li><code>src/features/syllabus/</code> (new folder)</li>
+            <li><code>src/routes/syllabus.tsx</code> (new)</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to build it</h4>
+          <p>List every syllabus level with its topics underneath. Mark the user's recommended starting level with a small "Recommended start" badge, but keep every other level clickable and open too. Clicking a level expands its list of topics.</p>
+        </div>
+        <div class="spec-block">
+          <h4>Definition of done</h4>
+          <ul class="dod">
+            <li>All levels and their topics load and display from the database.</li>
+            <li>The recommended level is visually marked but nothing else is locked or disabled.</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to check your work</h4>
+          <div class="verify">// browse the page as a user who has already completed the diagnostic</div>
+        </div>
+      </div>
+    </article>
+
+    <!-- SYL-10 -->
+    <article class="ticket" id="syl-10">
+      <div class="ticket-head">
+        <span class="ticket-num">10</span>
+        <div style="flex:1">
+          <h3>Wire onboarding, diagnostic, and results to the real backend</h3>
+          <div class="tags">
+            <span class="tag frontend">Frontend</span>
+            <span class="tag">3h</span>
+            <span class="tag">Depends on: 03, 04, 06, 07, 08</span>
+          </div>
+        </div>
+        <label class="check">
+          <input type="checkbox" data-id="syl-10">
+          <span class="box"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </label>
+      </div>
+      <p class="plain">The last step: swap every piece of mock data built in tickets 6, 7, and 8 for real calls to the backend endpoints built in tickets 3 and 4.</p>
+      <p class="why">This is the ticket that turns five separate working pieces into one working product. Do it last, once the backend tickets have actually landed.</p>
+      <div class="spec-grid">
+        <div class="spec-block">
+          <h4>Files you'll touch</h4>
+          <ul class="filelist">
+            <li>Same files touched in tickets 06, 07, and 08</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to build it</h4>
+          <p>Replace every mock function call with the matching real API call from the contract defined in ticket 4. Use the existing shared API client and error-message pattern for loading and error states — don't invent a new one.</p>
+        </div>
+        <div class="spec-block">
+          <h4>Definition of done</h4>
+          <ul class="dod">
+            <li>A brand-new registration can walk the whole path — onboarding, diagnostic, results, syllabus — with no mock data left anywhere in it.</li>
+          </ul>
+        </div>
+        <div class="spec-block">
+          <h4>How to check your work</h4>
+          <div class="verify">// register a fresh account and walk the entire flow start to finish</div>
+        </div>
+      </div>
+    </article>
+
+  </main>
+</div>
+
+<footer>
+  <div class="layout-pad">Ten tickets, one week. Backend tickets have no dependency on frontend ones and vice versa — the two of you can work in parallel almost the whole way through.</div>
+</footer>
+
+<script>
+(function() {
+  var ids = ['syl-1','syl-2','syl-3','syl-4','syl-5','syl-6','syl-7','syl-8','syl-9','syl-10'];
+  var STORAGE_KEY = 'codelingo-week1-progress';
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  function saveState(state) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      /* storage unavailable — progress just won't persist */
+    }
+  }
+
+  var state = loadState();
+
+  function render() {
+    var done = 0;
+    ids.forEach(function(id) {
+      var checked = !!state[id];
+      if (checked) done++;
+      var input = document.querySelector('.ticket input[data-id="' + id + '"]');
+      if (input) input.checked = checked;
+      var tocLink = document.querySelector('.toc a[data-id="' + id + '"]');
+      if (tocLink) tocLink.classList.toggle('done', checked);
+    });
+    var pct = Math.round((done / ids.length) * 100);
+    var fill = document.getElementById('progressFill');
+    if (fill) fill.style.width = pct + '%';
+    var label = document.getElementById('progressLabel');
+    if (label) label.textContent = done + ' of ' + ids.length + ' done';
+  }
+
+  ids.forEach(function(id) {
+    var input = document.querySelector('.ticket input[data-id="' + id + '"]');
+    if (!input) return;
+    input.addEventListener('change', function() {
+      state[id] = input.checked;
+      saveState(state);
+      render();
+    });
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
