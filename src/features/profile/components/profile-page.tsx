@@ -479,7 +479,11 @@ export function ProfilePage() {
               <div className="empty-icon">📊</div>
               <h2>No diagnostic yet</h2>
               <p>Complete your first diagnostic to unlock your skill radar, insights, and concept breakdown.</p>
-              <button className="start-diagnostic-btn" type="button">
+              <button
+                className="start-diagnostic-btn"
+                type="button"
+                onClick={() => navigate({ to: '/diagnostic' })}
+              >
                 Start Diagnostic →
               </button>
             </section>

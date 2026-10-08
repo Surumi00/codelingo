@@ -1,30 +1,82 @@
-import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { onboardingData, type OnboardingStep } from "../../../mocks/onboarding-data";
-import happyCharacter from "../../../assets/characters/happy.png";
-import hiCharacter from "../../../assets/characters/hi.png";
+import { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import axios from 'axios'
+import { onboardingData, type OnboardingStep } from '../../../mocks/onboarding-data'
+import happyCharacter from '../../../assets/characters/happy.png'
+import hiCharacter from '../../../assets/characters/hi.png'
 
 const characterAssets = {
   happy: happyCharacter,
   hi: hiCharacter,
 } as const
 
+type AnswerKey = 'occupation' | 'experienceLevel' | 'language'
+
+type OnboardingAnswers = Record<AnswerKey, string>
+
+const initialAnswers: OnboardingAnswers = {
+  occupation: '',
+  experienceLevel: '',
+  language: '',
+}
+
 export function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0)
-  const [selectedLanguage, setSelectedLanguage] = useState('PY')
+  const [answers, setAnswers] = useState<OnboardingAnswers>(initialAnswers)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const navigate = useNavigate()
 
-    const step: OnboardingStep = onboardingData[currentStep];
+  const step: OnboardingStep = onboardingData[currentStep]
 
   const getCharacterImage = (): string => characterAssets[step.image]
 
-  const handleButtonClick = () => {
-    if (currentStep < onboardingData.length - 1) {
-      setCurrentStep((previousStep) => previousStep + 1)
+  const isFinalScreen = currentStep === onboardingData.length - 1
+
+  const handleContinue = () => {
+    if (isFinalScreen) {
+      submitOnboarding()
+      return
+    }
+    setCurrentStep((previousStep) => previousStep + 1)
+  }
+
+  const handleAnswerSelect = (key: AnswerKey, value: string) => {
+    setAnswers((previousAnswers) => ({
+      ...previousAnswers,
+      [key]: value,
+    }))
+  }
+
+  const currentAnswer = step.answerKey ? answers[step.answerKey] : ''
+  const canContinue = !step.answerKey || Boolean(currentAnswer)
+
+  const submitOnboarding = async () => {
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+      navigate({ to: '/login' })
       return
     }
 
-    navigate({ to: '/profile' })
+    if (isSubmitting) {
+      return
+    }
+
+    setIsSubmitting(true)
+    setSubmitError('')
+
+    try {
+      await axios.post('http://localhost:3000/me/onboarding', answers, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      navigate({ to: '/diagnostic' })
+    } catch (error) {
+      console.error('Failed to save onboarding answers:', error)
+      setSubmitError("We couldn't save your answers. Please try again.")
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -48,19 +100,24 @@ export function OnboardingPage() {
               {step.title}
             </h1>
 
-            <div className="grid w-full max-w-[460px] grid-cols-3 gap-4">
+            <div className="grid w-full max-w-[460px] grid-cols-2 gap-4 sm:grid-cols-3">
               {step.options?.map((option) => {
-                const isSelected = selectedLanguage === option.value
+                const isSelected = step.answerKey && currentAnswer === option.value
+                const isDisabled = Boolean(option.comingSoon)
 
                 return (
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => setSelectedLanguage(option.value)}
-                    className={`flex min-h-[140px] flex-col items-center justify-center rounded-[18px] border text-center transition-all duration-200 ${
+                    aria-pressed={Boolean(isSelected)}
+                    disabled={isDisabled}
+                    onClick={() => step.answerKey && handleAnswerSelect(step.answerKey, option.value)}
+                    className={`relative flex min-h-[140px] flex-col items-center justify-center rounded-[18px] border text-center transition-all duration-200 ${
                       isSelected
                         ? 'border-purple-300 bg-gradient-to-b from-purple-400/95 to-purple-500/70 shadow-[0_0_25px_rgba(168,114,255,0.4)]'
-                        : 'border-[#4b415c] bg-[#1f1d29]/80 text-white/90 hover:border-purple-400/70'
+                        : isDisabled
+                          ? 'cursor-not-allowed border-[#3a3344] bg-[#16141d]/70 text-white/40'
+                          : 'border-[#4b415c] bg-[#1f1d29]/80 text-white/90 hover:border-purple-400/70'
                     }`}
                   >
                     <span className="mb-3 text-3xl font-extrabold tracking-wide text-white">
@@ -69,6 +126,11 @@ export function OnboardingPage() {
                     <span className="text-lg font-medium text-white/90">
                       {option.name}
                     </span>
+                    {option.comingSoon && (
+                      <span className="absolute right-2 top-2 rounded-full bg-purple-500/25 px-2 py-0.5 text-[10px] font-bold text-purple-200">
+                        Coming soon
+                      </span>
+                    )}
                   </button>
                 )
               })}
@@ -76,8 +138,13 @@ export function OnboardingPage() {
 
             <button
               type="button"
-              onClick={handleButtonClick}
-              className="mt-4 h-16 w-full max-w-[460px] rounded-[18px] bg-gradient-to-r from-purple-500 to-purple-600 px-6 text-lg font-bold text-white shadow-[0_18px_32px_rgba(123,74,212,0.35)] transition-all duration-300 hover:brightness-110 active:scale-[0.99]"
+              onClick={handleContinue}
+              disabled={!canContinue}
+              className={`mt-4 h-16 w-full max-w-[460px] rounded-[18px] px-6 text-lg font-bold transition-all duration-300 ${
+                canContinue
+                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-[0_18px_32px_rgba(123,74,212,0.35)] hover:brightness-110 active:scale-[0.99]'
+                  : 'cursor-not-allowed border border-[#3a3344] bg-[#16141d]/70 text-white/40'
+              }`}
             >
               {step.buttonText}
             </button>
@@ -109,11 +176,18 @@ export function OnboardingPage() {
 
             <button
               type="button"
-              onClick={handleButtonClick}
-              className="mt-4 h-16 w-full max-w-[520px] rounded-[18px] bg-gradient-to-r from-purple-500 to-purple-600 px-6 text-lg font-bold text-white shadow-[0_18px_32px_rgba(123,74,212,0.35)] transition-all duration-300 hover:brightness-110 active:scale-[0.99]"
+              onClick={handleContinue}
+              disabled={isSubmitting}
+              className="mt-4 h-16 w-full max-w-[520px] rounded-[18px] bg-gradient-to-r from-purple-500 to-purple-600 px-6 text-lg font-bold text-white shadow-[0_18px_32px_rgba(123,74,212,0.35)] transition-all duration-300 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {step.buttonText}
+              {isSubmitting ? 'Saving…' : step.buttonText}
             </button>
+
+            {submitError && (
+              <p className="mt-4 text-sm font-semibold text-red-300" role="alert">
+                {submitError}
+              </p>
+            )}
           </div>
         )}
 
@@ -137,13 +211,27 @@ export function OnboardingPage() {
 
             <button
               type="button"
-              onClick={handleButtonClick}
+              onClick={handleContinue}
               className="h-14 w-full max-w-[220px] rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-3 text-base font-bold text-white transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95"
             >
               {step.buttonText}
             </button>
           </div>
         )}
+
+        <div className="mt-6 flex items-center justify-center gap-2">
+          {onboardingData.map((entry, index) => (
+            <span
+              key={entry.title}
+              className={`h-2.5 rounded-full transition-all duration-300 ${
+                index === currentStep
+                  ? 'w-8 bg-gradient-to-r from-purple-500 to-purple-600'
+                  : 'w-2.5 bg-purple-500/30'
+              }`}
+              aria-hidden="true"
+            />
+          ))}
+        </div>
       </div>
     </main>
   )

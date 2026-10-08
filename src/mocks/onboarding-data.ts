@@ -2,6 +2,7 @@ export interface OnboardingOption {
   value: string
   label: string
   name: string
+  comingSoon?: boolean
 }
 
 export interface OnboardingStep {
@@ -11,6 +12,7 @@ export interface OnboardingStep {
   image: 'happy' | 'hi'
   variant?: 'welcome' | 'message' | 'project-intro' | 'learning'
   options?: OnboardingOption[]
+  answerKey?: 'occupation' | 'experienceLevel' | 'language'
 }
 
 export const onboardingData: OnboardingStep[] = [
@@ -35,19 +37,45 @@ export const onboardingData: OnboardingStep[] = [
     variant: 'project-intro',
   },
   {
+    title: 'What do you do?',
+    buttonText: 'Continue',
+    image: 'happy',
+    variant: 'learning',
+    answerKey: 'occupation',
+    options: [
+      { value: 'STUDENT', label: '🎓', name: 'Student' },
+      { value: 'PROFESSIONAL', label: '💼', name: 'Professional' },
+      { value: 'HOBBYIST', label: '🎮', name: 'Hobbyist' },
+    ],
+  },
+  {
+    title: 'How much coding experience do you have?',
+    buttonText: 'Continue',
+    image: 'happy',
+    variant: 'learning',
+    answerKey: 'experienceLevel',
+    options: [
+      { value: 'STUDENT', label: '🎒', name: 'Student' },
+      { value: 'BEGINNER', label: '🌱', name: 'Beginner' },
+      { value: 'SOME_EXPERIENCE', label: '💪', name: 'Some experience' },
+      { value: 'EXPERIENCED', label: '🚀', name: 'Experienced' },
+    ],
+  },
+  {
     title: 'What do you want to learn?',
     buttonText: 'Start the diagnostic →',
     image: 'happy',
     variant: 'learning',
+    answerKey: 'language',
     options: [
-      { value: 'PY', label: 'PY', name: 'Python' },
-      { value: 'JV', label: 'JV', name: 'Java' },
-      { value: 'JS', label: 'JS', name: 'JavaScript' },
+      { value: 'PYTHON', label: 'PY', name: 'Python' },
+      { value: 'JAVA', label: 'JV', name: 'Java', comingSoon: true },
+      { value: 'JAVASCRIPT', label: 'JS', name: 'JavaScript', comingSoon: true },
     ],
   },
   {
     title:
-      "First, I'll ask you 20 questions to see where you stand. Based on your results, you'll be placed at the right level — and that's where your journey begins.",
+      "First, I'll ask you 15 questions to see where you stand. Based on your results, you'll be placed at the right level — and that's where your journey begins.",
     buttonText: "I'm ready — start the test!",
     image: 'hi',
     variant: 'message',
