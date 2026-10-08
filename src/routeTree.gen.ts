@@ -9,12 +9,27 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as DiagnosticRouteImport } from './routes/diagnostic'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as SyllabusRouteImport } from './routes/syllabus'
 import { Route as TicketsDevRouteImport } from './routes/tickets-dev'
+import { Route as DiagnosticIndexRouteImport } from './routes/diagnostic/index'
+import { Route as DiagnosticResultsRouteImport } from './routes/diagnostic/results'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiagnosticRoute = DiagnosticRouteImport.update({
+  id: '/diagnostic',
+  path: '/diagnostic',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -35,59 +50,128 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SyllabusRoute = SyllabusRouteImport.update({
+  id: '/syllabus',
+  path: '/syllabus',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TicketsDevRoute = TicketsDevRouteImport.update({
   id: '/tickets-dev',
   path: '/tickets-dev',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DiagnosticIndexRoute = DiagnosticIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DiagnosticRoute,
+} as any)
+const DiagnosticResultsRoute = DiagnosticResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => DiagnosticRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/diagnostic': typeof DiagnosticRouteWithChildren
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/syllabus': typeof SyllabusRoute
   '/tickets-dev': typeof TicketsDevRoute
+  '/diagnostic/results': typeof DiagnosticResultsRoute
+  '/diagnostic/': typeof DiagnosticIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/syllabus': typeof SyllabusRoute
   '/tickets-dev': typeof TicketsDevRoute
+  '/diagnostic/results': typeof DiagnosticResultsRoute
+  '/diagnostic': typeof DiagnosticIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/diagnostic': typeof DiagnosticRouteWithChildren
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/syllabus': typeof SyllabusRoute
   '/tickets-dev': typeof TicketsDevRoute
+  '/diagnostic/results': typeof DiagnosticResultsRoute
+  '/diagnostic/': typeof DiagnosticIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/login' | '/onboarding' | '/profile' | '/register' | '/tickets-dev'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/onboarding' | '/profile' | '/register' | '/tickets-dev'
-  id:
-    | '__root__'
+    | '/'
+    | '/diagnostic'
     | '/login'
     | '/onboarding'
     | '/profile'
     | '/register'
+    | '/syllabus'
     | '/tickets-dev'
+    | '/diagnostic/results'
+    | '/diagnostic/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/login'
+    | '/onboarding'
+    | '/profile'
+    | '/register'
+    | '/syllabus'
+    | '/tickets-dev'
+    | '/diagnostic/results'
+    | '/diagnostic'
+  id:
+    | '__root__'
+    | '/'
+    | '/diagnostic'
+    | '/login'
+    | '/onboarding'
+    | '/profile'
+    | '/register'
+    | '/syllabus'
+    | '/tickets-dev'
+    | '/diagnostic/results'
+    | '/diagnostic/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  DiagnosticRoute: typeof DiagnosticRouteWithChildren
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
+  SyllabusRoute: typeof SyllabusRoute
   TicketsDevRoute: typeof TicketsDevRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/diagnostic': {
+      id: '/diagnostic'
+      path: '/diagnostic'
+      fullPath: '/diagnostic'
+      preLoaderRoute: typeof DiagnosticRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -116,6 +200,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/syllabus': {
+      id: '/syllabus'
+      path: '/syllabus'
+      fullPath: '/syllabus'
+      preLoaderRoute: typeof SyllabusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tickets-dev': {
       id: '/tickets-dev'
       path: '/tickets-dev'
@@ -123,14 +214,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TicketsDevRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/diagnostic/': {
+      id: '/diagnostic/'
+      path: '/'
+      fullPath: '/diagnostic/'
+      preLoaderRoute: typeof DiagnosticIndexRouteImport
+      parentRoute: typeof DiagnosticRoute
+    }
+    '/diagnostic/results': {
+      id: '/diagnostic/results'
+      path: '/results'
+      fullPath: '/diagnostic/results'
+      preLoaderRoute: typeof DiagnosticResultsRouteImport
+      parentRoute: typeof DiagnosticRoute
+    }
   }
 }
 
+interface DiagnosticRouteChildren {
+  DiagnosticResultsRoute: typeof DiagnosticResultsRoute
+  DiagnosticIndexRoute: typeof DiagnosticIndexRoute
+}
+
+const DiagnosticRouteChildren: DiagnosticRouteChildren = {
+  DiagnosticResultsRoute: DiagnosticResultsRoute,
+  DiagnosticIndexRoute: DiagnosticIndexRoute,
+}
+
+const DiagnosticRouteWithChildren = DiagnosticRoute._addFileChildren(
+  DiagnosticRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  DiagnosticRoute: DiagnosticRouteWithChildren,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
+  SyllabusRoute: SyllabusRoute,
   TicketsDevRoute: TicketsDevRoute,
 }
 export const routeTree = rootRouteImport
