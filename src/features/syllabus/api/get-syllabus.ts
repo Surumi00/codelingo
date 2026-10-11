@@ -1,24 +1,30 @@
 import axios from 'axios'
-import type { SyllabusLevel, SyllabusTopic } from '../types'
+import type { SyllabusConcept, SyllabusLevel, SyllabusTopic } from '../types'
 
-const endpointCandidates = [
-  '/syllabus/levels',
-  '/syllabus',
-  '/api/syllabus/levels',
-  '/api/syllabus',
-]
+const API_BASE_URL = 'http://localhost:3000'
+const SYLLABUS_ENDPOINT = `${API_BASE_URL}/api/syllabus`
 
-function pickFirstString(...values: Array<unknown>): string | undefined {
-  for (const value of values) {
-    if (typeof value === 'string' && value.trim().length > 0) {
-      return value.trim()
-    }
+function readString(value: unknown): string | undefined {
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value.trim()
   }
 
   return undefined
 }
 
-function safeNumber(value: unknown, fallback: number): number {
+function readId(value: unknown, fallback: string): string | number {
+  if (typeof value === 'string' && value.trim() !== '') {
+    return value.trim()
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  return fallback
+}
+
+function readOrder(value: unknown, fallback: number): number {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return value
   }
@@ -33,16 +39,35 @@ function safeNumber(value: unknown, fallback: number): number {
   return fallback
 }
 
-function normalizeId(value: unknown, fallback: string | number): string | number {
-  if (typeof value === 'string' && value.trim() !== '') {
-    return value.trim()
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : []
+}
+
+function normalizeConcept(rawConcept: unknown, fallbackId: string): SyllabusConcept | null {
+  if (!rawConcept || typeof rawConcept !== 'object') {
+    return null
   }
 
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value
+  const record = rawConcept as Record<string, unknown>
+  const name = readString(record.title) ?? readString(record.name) ?? readString(record.conceptSlug)
+
+  if (!name) {
+    return null
   }
 
-  return fallback
+  return {
+    id: readId(record.id, fallbackId),
+    name,
+    title: readString(record.title) ?? name,
+    description: readString(record.description),
+    slug: readString(record.conceptSlug) ?? readString(record.slug),
+  }
+}
+
+function normalizeConcepts(rawConcepts: unknown, topicId: string): SyllabusConcept[] {
+  return asArray(rawConcepts)
+    .map((concept, index) => normalizeConcept(concept, `${topicId}-concept-${index}`))
+    .filter((concept): concept is SyllabusConcept => concept !== null)
 }
 
 function normalizeTopic(rawTopic: unknown, fallbackIndex: number, levelId: string | number): SyllabusTopic | null {
@@ -51,45 +76,29 @@ function normalizeTopic(rawTopic: unknown, fallbackIndex: number, levelId: strin
   }
 
   const record = rawTopic as Record<string, unknown>
-  const name = pickFirstString(
-    record.name,
-    record.title,
-    record.label,
-    record.slug,
-    record.topicName,
-    record.conceptName,
-  )
+  const name = readString(record.title) ?? readString(record.name) ?? readString(record.slug)
 
   if (!name) {
     return null
   }
 
+  const topicId = String(readId(record.id, `${String(levelId)}-topic-${fallbackIndex}`))
+
   return {
-    id: normalizeId(record.id ?? record.slug ?? `${String(levelId)}-${fallbackIndex}`, `${String(levelId)}-${fallbackIndex}`),
+    id: readId(record.id, topicId),
     name,
-    title: pickFirstString(record.title, record.name, record.label) ?? name,
-    slug: pickFirstString(record.slug, record.key) ?? undefined,
-    description: pickFirstString(record.description, record.summary) ?? undefined,
+    title: readString(record.title) ?? name,
+    slug: readString(record.slug),
+    description: readString(record.blurb) ?? readString(record.description),
     icon: typeof record.icon === 'string' ? record.icon : undefined,
-    order: safeNumber(record.order ?? record.position ?? record.sortOrder, fallbackIndex),
+    order: readOrder(record.order, fallbackIndex),
     levelId,
+    concepts: normalizeConcepts(record.concepts, topicId),
   }
 }
 
 function normalizeTopics(rawTopics: unknown, levelId: string | number): SyllabusTopic[] {
-  if (!rawTopics) {
-    return []
-  }
-
-  const asArray = Array.isArray(rawTopics)
-    ? rawTopics
-    : Array.isArray((rawTopics as { items?: unknown[] } | undefined)?.items)
-      ? (rawTopics as { items: unknown[] }).items
-      : Array.isArray((rawTopics as { topics?: unknown[] } | undefined)?.topics)
-        ? (rawTopics as { topics: unknown[] }).topics
-        : []
-
-  return asArray
+  return asArray(rawTopics)
     .map((topic, index) => normalizeTopic(topic, index, levelId))
     .filter((topic): topic is SyllabusTopic => topic !== null)
 }
@@ -100,111 +109,43 @@ function normalizeLevel(rawLevel: unknown, fallbackIndex: number): SyllabusLevel
   }
 
   const record = rawLevel as Record<string, unknown>
-  const name = pickFirstString(
-    record.name,
-    record.title,
-    record.label,
-    record.levelName,
-    record.topicName,
-  )
+  const name = readString(record.title) ?? readString(record.name) ?? readString(record.label)
 
   if (!name) {
     return null
   }
 
-  const levelId = normalizeId(record.id ?? record.slug ?? record.levelId ?? `level-${fallbackIndex}`, `level-${fallbackIndex}`)
-  const topics = normalizeTopics(
-    record.topics ?? record.items ?? record.concepts ?? record.modules ?? record.lessons,
-    levelId,
-  )
+  const levelId = readId(record.id, `level-${fallbackIndex}`)
 
   return {
     id: levelId,
     name,
-    title: pickFirstString(record.title, record.name, record.label) ?? name,
-    slug: pickFirstString(record.slug, record.key) ?? undefined,
-    description: pickFirstString(record.description, record.summary, record.subtitle) ?? undefined,
-    label: pickFirstString(record.label, record.name) ?? name,
-    order: safeNumber(record.order ?? record.position ?? record.levelOrder, fallbackIndex),
-    topics,
+    title: readString(record.title) ?? name,
+    slug: readString(record.slug),
+    description: readString(record.description),
+    label: readString(record.label) ?? name,
+    order: readOrder(record.order, fallbackIndex),
+    topics: normalizeTopics(record.topics, levelId),
   }
 }
 
 function extractLevels(payload: unknown): SyllabusLevel[] {
-  if (Array.isArray(payload)) {
-    return payload
-      .map((item, index) => normalizeLevel(item, index))
-      .filter((item): item is SyllabusLevel => item !== null)
-  }
+  const collection = Array.isArray(payload)
+    ? payload
+    : payload && typeof payload === 'object' && Array.isArray((payload as { data?: unknown }).data)
+      ? ((payload as { data: unknown[] }).data)
+      : []
 
-  if (!payload || typeof payload !== 'object') {
-    return []
-  }
-
-  const record = payload as Record<string, unknown>
-
-  const candidateCollections = [
-    record.levels,
-    record.items,
-    record.data,
-    record.result,
-    record.syllabus,
-    record.rows,
-    record.entries,
-  ]
-
-  for (const candidate of candidateCollections) {
-    if (Array.isArray(candidate)) {
-      const levels = candidate
-        .map((level, index) => normalizeLevel(level, index))
-        .filter((level): level is SyllabusLevel => level !== null)
-
-      if (levels.length > 0) {
-        return levels
-      }
-    }
-
-    if (candidate && typeof candidate === 'object') {
-      const nested = candidate as Record<string, unknown>
-      const nestedLevels = nested.levels
-      if (Array.isArray(nestedLevels)) {
-        const levels = nestedLevels
-          .map((level, index) => normalizeLevel(level, index))
-          .filter((level): level is SyllabusLevel => level !== null)
-
-        if (levels.length > 0) {
-          return levels
-        }
-      }
-    }
-  }
-
-  const topLevel = normalizeLevel(payload, 0)
-  return topLevel ? [topLevel] : []
+  return collection
+    .map((level, index) => normalizeLevel(level, index))
+    .filter((level): level is SyllabusLevel => level !== null)
 }
 
 export async function getSyllabusLevels(): Promise<SyllabusLevel[]> {
   const token = typeof localStorage === 'undefined' ? null : localStorage.getItem('token')
   const headers = token ? { Authorization: `Bearer ${token}` } : undefined
 
-  let lastError: unknown
+  const response = await axios.get<unknown>(SYLLABUS_ENDPOINT, { headers })
 
-  for (const endpoint of endpointCandidates) {
-    try {
-      const response = await axios.get<unknown>(`http://localhost:3000${endpoint}`, { headers })
-      const levels = extractLevels(response.data)
-
-      if (levels.length > 0) {
-        return levels
-      }
-    } catch (error) {
-      lastError = error
-    }
-  }
-
-  if (lastError instanceof Error) {
-    throw lastError
-  }
-
-  throw new Error('Unable to load the syllabus.')
+  return extractLevels(response.data)
 }

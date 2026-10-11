@@ -1,3 +1,12 @@
+export type SyllabusConcept = {
+  id: string | number
+  name: string
+  title?: string
+  description?: string
+  slug?: string
+  order?: number
+}
+
 export type SyllabusTopic = {
   id: string | number
   name: string
@@ -7,6 +16,7 @@ export type SyllabusTopic = {
   icon?: string | null
   order?: number
   levelId?: string | number
+  concepts: SyllabusConcept[]
 }
 
 export type SyllabusLevel = {
@@ -20,8 +30,10 @@ export type SyllabusLevel = {
   topics: SyllabusTopic[]
 }
 
+export type DiagnosticStartingLevel = string | { id?: string | number; title?: string } | null
+
 export type DiagnosticLikeResult = {
-  startingSyllabusLevel?: string | null
+  startingSyllabusLevel?: DiagnosticStartingLevel
   level?: string | null
   name?: string | null
 }
