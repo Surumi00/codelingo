@@ -31,13 +31,6 @@ export function DiagnosticPage() {
     let isMounted = true
 
     const loadQuestions = async () => {
-      const token = localStorage.getItem('token')
-
-      if (!token) {
-        navigate({ to: '/login' })
-        return
-      }
-
       try {
         const data = await getDiagnosticQuestions()
 
@@ -135,13 +128,6 @@ export function DiagnosticPage() {
 
     if (!allQuestionsAnswered) {
       setSubmitError('Please answer every question before finishing the test.')
-      return
-    }
-
-    const token = localStorage.getItem('token')
-
-    if (!token) {
-      navigate({ to: '/login' })
       return
     }
 

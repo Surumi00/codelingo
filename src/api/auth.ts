@@ -5,8 +5,19 @@ export type LoginInput = {
   password: string
 }
 
+export type AuthUser = {
+  id?: string
+  name?: string
+  email?: string
+  occupation?: string | null
+  experienceLevel?: string | null
+  hasCompletedOnboarding?: boolean
+  hasTakenDiagnostic?: boolean
+}
+
 export type LoginResponse = {
   token: string
+  user?: AuthUser
 }
 
 export type RegisterInput = {

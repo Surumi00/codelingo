@@ -12,6 +12,34 @@ const initialInput = {
 type RegisterInput = typeof initialInput
 type RegisterErrors = Partial<Record<keyof RegisterInput, string>>
 
+function getRegisterErrorMessage(error: unknown): string {
+  const responseData = (error as { response?: { data?: unknown } })?.response?.data
+
+  if (responseData && typeof responseData === 'object') {
+    const record = responseData as {
+      error?: { message?: unknown }
+      message?: unknown
+    }
+    const nestedMessage = record.error?.message
+
+    if (typeof nestedMessage === 'string' && nestedMessage.trim()) {
+      return nestedMessage
+    }
+
+    if (typeof record.message === 'string' && record.message.trim()) {
+      return record.message
+    }
+  }
+
+  const fallbackMessage = (error as { message?: unknown })?.message
+
+  if (typeof fallbackMessage === 'string' && fallbackMessage.trim()) {
+    return fallbackMessage
+  }
+
+  return 'Registration failed.'
+}
+
 function validate(input: RegisterInput): RegisterErrors {
   const errors: RegisterErrors = {}
 
@@ -66,9 +94,7 @@ export function RegisterPage() {
         alert('Registration successful! You can now log in.')
       })
       .catch((error) => {
-         console.log(error)
-  const message = error.response?.data?.message ?? 'Registration failed.'
-  setStatus(message)
+        setStatus(getRegisterErrorMessage(error))
       })
   }
 

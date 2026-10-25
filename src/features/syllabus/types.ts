@@ -1,3 +1,13 @@
+export type LessonStatus = 'LOCKED' | 'AVAILABLE' | 'COMPLETED'
+
+export type SyllabusLesson = {
+  id: string | number
+  title: string
+  order: number
+  xpReward: number
+  status: LessonStatus
+}
+
 export type SyllabusConcept = {
   id: string | number
   name: string
@@ -5,6 +15,7 @@ export type SyllabusConcept = {
   description?: string
   slug?: string
   order?: number
+  lessons: SyllabusLesson[]
 }
 
 export type SyllabusTopic = {

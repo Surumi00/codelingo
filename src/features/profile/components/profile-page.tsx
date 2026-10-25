@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { getErrorStatus } from '../../../api/client'
 import { getMe } from '../../../api/auth'
 import { getDiagnosticResult } from '../../../api/diagnostic'
+import { useProgress } from '../../progress/use-progress'
 import './profile-page.css'
 
 type ProfileData = {
@@ -192,6 +193,7 @@ function RadarChart({ concepts }: { concepts: Diagnosis['concepts'] }) {
 
 export function ProfilePage() {
   const navigate = useNavigate()
+  const { totalXp, currentStreak, longestStreak, completedLessonIds } = useProgress()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [language, setLanguage] = useState('Python')
@@ -219,14 +221,6 @@ export function ProfilePage() {
       }
     }
 
-    const token = localStorage.getItem('token')
-
-    if (!token) {
-      navigate({ to: '/login' })
-      setLoading(false)
-      return
-    }
-
     const fetchProfile = async () => {
       try {
         const profileData = await getMe()
@@ -244,8 +238,7 @@ export function ProfilePage() {
         setLanguage(nextProfile.language)
         setProfileBeforeEdit(nextProfile)
       } catch {
-        localStorage.removeItem('token')
-        navigate({ to: '/login' })
+        // The API client redirects on 401; keep any cached profile otherwise.
         setLoading(false)
         return
       }
@@ -297,6 +290,13 @@ export function ProfilePage() {
     setIsEditing(false)
   }
 
+  const logout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('diagnostic_result')
+    localStorage.removeItem('codelingo_profile')
+    navigate({ to: '/login' })
+  }
+
   const summaryLevel = diagnosis?.level || 'Beginner'
 
   return (
@@ -321,7 +321,11 @@ export function ProfilePage() {
         <header className="profile-topbar">
           <div className="breadcrumb">Your learning space</div>
           <div className="topbar-actions">
-            <span className="xp-badge">8 XP</span>
+            <span className="xp-badge">{totalXp} XP</span>
+            <span className="streak-badge">🔥 {currentStreak}</span>
+            <button type="button" className="logout-button" onClick={logout}>
+              Log out
+            </button>
             <span className="topbar-avatar">{initials}</span>
           </div>
         </header>
@@ -344,6 +348,12 @@ export function ProfilePage() {
                 <h2>{name || 'Your Name'}</h2>
                 <p>{email || 'your@email.com'}</p>
                 <span className="level-tag">🐍 {language || 'Python'} · {summaryLevel}</span>
+                <span className="level-tag">
+                  {totalXp} XP · {currentStreak} day streak
+                </span>
+                <span className="level-tag">
+                  Best streak: {longestStreak} days · {completedLessonIds.length} lessons completed
+                </span>
               </div>
             </div>
 

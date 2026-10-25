@@ -1,25 +1,18 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-
-export const Route = createFileRoute('/tickets-dev')({
-  component: TicketsDevPage,
-})
+import weekOneHtml from './tickets-dev.html?raw'
+import batchTwoHtml from './CodeLingo — Batch Two Build Plan.html?raw'
 
 const TABS = [
-  { id: 'week-one', label: 'Week One', src: '/tickets-dev.html' },
-  {
-    id: 'batch-two',
-    label: 'Batch Two',
-    src: `/${encodeURIComponent('CodeLingo — Batch Two Build Plan.html')}`,
-  },
+  { id: 'week-one', label: 'Week One', html: weekOneHtml },
+  { id: 'batch-two', label: 'Batch Two', html: batchTwoHtml },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
 
-function TicketsDevPage() {
+export function TicketsDevPage() {
   const [activeTab, setActiveTab] = useState<TabId>('week-one')
 
-  const activeSrc = TABS.find((tab) => tab.id === activeTab)?.src ?? TABS[0].src
+  const activeTabContent = TABS.find((tab) => tab.id === activeTab) ?? TABS[0]
 
   return (
     <div className="flex h-screen w-full flex-col bg-[#faf8f3]">
@@ -42,8 +35,8 @@ function TicketsDevPage() {
       </nav>
 
       <iframe
-        key={activeSrc}
-        src={activeSrc}
+        key={activeTabContent.id}
+        srcDoc={activeTabContent.html}
         title={
           activeTab === 'batch-two'
             ? 'CodeLingo Batch Two Build Plan'

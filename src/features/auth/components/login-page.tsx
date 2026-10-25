@@ -21,23 +21,29 @@ export function LoginPage() {
     })
   }
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    console.log(input)
+    try {
+      const res = await login(input)
+      localStorage.setItem('token', res.token)
+      setStatus('Login successful!')
 
-    login(input)
-      .then((res) => {
-        console.log(res)
-        setStatus('Login successful!')
-        localStorage.setItem('token', res.token)
-        // Navigate to onboarding after successful login
+      const user = res.user
+
+      // Onboarding is still a first-run step.
+      if (!user?.hasCompletedOnboarding) {
         navigate({ to: '/onboarding' })
-      })
-      .catch((error) => {
-        console.log(error)
-        setStatus('Login failed')
-      })
+        return
+      }
+
+      // The diagnostic is asked for exactly once: users who have never
+      // completed it get placed first, everyone else continues learning.
+      navigate({ to: user.hasTakenDiagnostic ? '/syllabus' : '/diagnostic' })
+    } catch (error) {
+      console.error('Login failed:', error)
+      setStatus('Login failed')
+    }
   }
 
   return (

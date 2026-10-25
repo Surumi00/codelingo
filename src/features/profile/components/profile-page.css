@@ -110,11 +110,26 @@ dt,
   gap: 16px;
 }
 
-.xp-badge {
+.xp-badge,
+.streak-badge {
   padding: 5px 10px;
   border-radius: 999px;
   color: #fff;
   background: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.streak-badge {
+  background: rgba(79, 209, 197, 0.18);
+  color: #9ef4e9;
+}
+
+.streak-badge {
+  padding: 5px 10px;
+  border-radius: 999px;
+  color: #ffd9a8;
+  background: rgba(249, 115, 22, 0.16);
   font-size: 12px;
   font-weight: 800;
 }
@@ -130,6 +145,23 @@ dt,
   background: #211237;
   font-size: 11px;
   font-weight: 800;
+}
+
+.logout-button {
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-strong);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.logout-button:hover {
+  border-color: var(--accent);
+  background: rgba(140, 79, 242, 0.12);
 }
 
 .profile-content {
@@ -233,6 +265,11 @@ dt,
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
+}
+
+.level-tag + .level-tag {
+  margin-left: 6px;
+  margin-top: 6px;
 }
 
 .score {
@@ -569,6 +606,21 @@ dt,
 
   .breadcrumb {
     font-size: 12px;
+  }
+
+  .topbar-actions {
+    gap: 8px;
+  }
+
+  .xp-badge,
+  .streak-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .logout-button {
+    padding: 6px 10px;
+    font-size: 11px;
   }
 
   .profile-content {

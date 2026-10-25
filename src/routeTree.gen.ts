@@ -16,9 +16,9 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as SyllabusRouteImport } from './routes/syllabus'
-import { Route as TicketsDevRouteImport } from './routes/tickets-dev'
 import { Route as DiagnosticIndexRouteImport } from './routes/diagnostic/index'
 import { Route as DiagnosticResultsRouteImport } from './routes/diagnostic/results'
+import { Route as LessonLessonIdRouteImport } from './routes/lesson/$lessonId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -55,11 +55,6 @@ const SyllabusRoute = SyllabusRouteImport.update({
   path: '/syllabus',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TicketsDevRoute = TicketsDevRouteImport.update({
-  id: '/tickets-dev',
-  path: '/tickets-dev',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DiagnosticIndexRoute = DiagnosticIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -70,6 +65,11 @@ const DiagnosticResultsRoute = DiagnosticResultsRouteImport.update({
   path: '/results',
   getParentRoute: () => DiagnosticRoute,
 } as any)
+const LessonLessonIdRoute = LessonLessonIdRouteImport.update({
+  id: '/lesson/$lessonId',
+  path: '/lesson/$lessonId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,8 +79,8 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/syllabus': typeof SyllabusRoute
-  '/tickets-dev': typeof TicketsDevRoute
   '/diagnostic/results': typeof DiagnosticResultsRoute
+  '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/diagnostic/': typeof DiagnosticIndexRoute
 }
 export interface FileRoutesByTo {
@@ -90,8 +90,8 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/syllabus': typeof SyllabusRoute
-  '/tickets-dev': typeof TicketsDevRoute
   '/diagnostic/results': typeof DiagnosticResultsRoute
+  '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/diagnostic': typeof DiagnosticIndexRoute
 }
 export interface FileRoutesById {
@@ -103,8 +103,8 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/syllabus': typeof SyllabusRoute
-  '/tickets-dev': typeof TicketsDevRoute
   '/diagnostic/results': typeof DiagnosticResultsRoute
+  '/lesson/$lessonId': typeof LessonLessonIdRoute
   '/diagnostic/': typeof DiagnosticIndexRoute
 }
 export interface FileRouteTypes {
@@ -117,8 +117,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/syllabus'
-    | '/tickets-dev'
     | '/diagnostic/results'
+    | '/lesson/$lessonId'
     | '/diagnostic/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -128,8 +128,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/syllabus'
-    | '/tickets-dev'
     | '/diagnostic/results'
+    | '/lesson/$lessonId'
     | '/diagnostic'
   id:
     | '__root__'
@@ -140,8 +140,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/syllabus'
-    | '/tickets-dev'
     | '/diagnostic/results'
+    | '/lesson/$lessonId'
     | '/diagnostic/'
   fileRoutesById: FileRoutesById
 }
@@ -153,7 +153,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   SyllabusRoute: typeof SyllabusRoute
-  TicketsDevRoute: typeof TicketsDevRoute
+  LessonLessonIdRoute: typeof LessonLessonIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -207,13 +207,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SyllabusRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tickets-dev': {
-      id: '/tickets-dev'
-      path: '/tickets-dev'
-      fullPath: '/tickets-dev'
-      preLoaderRoute: typeof TicketsDevRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/diagnostic/': {
       id: '/diagnostic/'
       path: '/'
@@ -227,6 +220,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/diagnostic/results'
       preLoaderRoute: typeof DiagnosticResultsRouteImport
       parentRoute: typeof DiagnosticRoute
+    }
+    '/lesson/$lessonId': {
+      id: '/lesson/$lessonId'
+      path: '/lesson/$lessonId'
+      fullPath: '/lesson/$lessonId'
+      preLoaderRoute: typeof LessonLessonIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -253,7 +253,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   SyllabusRoute: SyllabusRoute,
-  TicketsDevRoute: TicketsDevRoute,
+  LessonLessonIdRoute: LessonLessonIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

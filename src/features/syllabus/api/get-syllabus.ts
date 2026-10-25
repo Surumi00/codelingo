@@ -1,5 +1,11 @@
 import { getSyllabus } from '../../../api/syllabus'
-import type { SyllabusConcept, SyllabusLevel, SyllabusTopic } from '../types'
+import type {
+  LessonStatus,
+  SyllabusConcept,
+  SyllabusLesson,
+  SyllabusLevel,
+  SyllabusTopic,
+} from '../types'
 
 function readString(value: unknown): string | undefined {
   if (typeof value === 'string' && value.trim().length > 0) {
@@ -40,6 +46,44 @@ function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : []
 }
 
+function readLessonStatus(value: unknown): LessonStatus {
+  const status = typeof value === 'string' ? value.toUpperCase() : ''
+
+  if (status === 'AVAILABLE' || status === 'COMPLETED') {
+    return status
+  }
+
+  return 'LOCKED'
+}
+
+function normalizeLesson(rawLesson: unknown, fallbackId: string): SyllabusLesson | null {
+  if (!rawLesson || typeof rawLesson !== 'object') {
+    return null
+  }
+
+  const record = rawLesson as Record<string, unknown>
+  const title = readString(record.title) ?? readString(record.name)
+
+  if (!title) {
+    return null
+  }
+
+  return {
+    id: readId(record.id, fallbackId),
+    title,
+    order: readOrder(record.order, 0),
+    xpReward: readOrder(record.xpReward, 10),
+    status: readLessonStatus(record.status),
+  }
+}
+
+function normalizeLessons(rawLessons: unknown, conceptId: string): SyllabusLesson[] {
+  return asArray(rawLessons)
+    .map((lesson, index) => normalizeLesson(lesson, `${conceptId}-lesson-${index}`))
+    .filter((lesson): lesson is SyllabusLesson => lesson !== null)
+    .sort((left, right) => left.order - right.order)
+}
+
 function normalizeConcept(rawConcept: unknown, fallbackId: string): SyllabusConcept | null {
   if (!rawConcept || typeof rawConcept !== 'object') {
     return null
@@ -52,12 +96,15 @@ function normalizeConcept(rawConcept: unknown, fallbackId: string): SyllabusConc
     return null
   }
 
+  const conceptId = readId(record.id, fallbackId)
+
   return {
-    id: readId(record.id, fallbackId),
+    id: conceptId,
     name,
     title: readString(record.title) ?? name,
     description: readString(record.description),
     slug: readString(record.conceptSlug) ?? readString(record.slug),
+    lessons: normalizeLessons(record.lessons, String(conceptId)),
   }
 }
 

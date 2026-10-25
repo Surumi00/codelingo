@@ -1,13 +1,22 @@
-import { useLocation } from '@tanstack/react-router'
-import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from '@tanstack/react-router'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useProgress } from '../../progress/use-progress'
 import { getSyllabusLevels } from '../api/get-syllabus'
-import type { DiagnosticLikeResult, SyllabusConcept, SyllabusLevel, SyllabusTopic } from '../types'
+import type {
+  DiagnosticLikeResult,
+  SyllabusConcept,
+  SyllabusLesson,
+  SyllabusLevel,
+  SyllabusTopic,
+} from '../types'
 import './syllabus-page.css'
 
 type RouteState = {
   startingLevel?: string | null
   result?: DiagnosticLikeResult
 }
+
+const LOCKED_TOOLTIP = 'Finish the previous lesson to unlock'
 
 function readSavedResult(): DiagnosticLikeResult | null {
   if (typeof localStorage === 'undefined') {
@@ -22,7 +31,7 @@ function readSavedResult(): DiagnosticLikeResult | null {
   }
 }
 
-function readStartingLevelName(result: DiagnosticLikeResult | null | undefined): string | null {
+function readStartingLevelTitle(result: DiagnosticLikeResult | null | undefined): string | null {
   if (!result) {
     return null
   }
@@ -35,6 +44,20 @@ function readStartingLevelName(result: DiagnosticLikeResult | null | undefined):
 
   if (startingLevel && typeof startingLevel === 'object') {
     return typeof startingLevel.title === 'string' ? startingLevel.title : null
+  }
+
+  return null
+}
+
+function readStartingLevelId(result: DiagnosticLikeResult | null | undefined): string | null {
+  if (!result) {
+    return null
+  }
+
+  const startingLevel = result.startingSyllabusLevel
+
+  if (startingLevel && typeof startingLevel === 'object' && startingLevel.id !== undefined) {
+    return String(startingLevel.id)
   }
 
   return null
@@ -58,6 +81,38 @@ function formatLevelLabel(value: string | null | undefined) {
     .filter(Boolean)
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase())
     .join(' ')
+}
+
+/**
+ * The diagnostic result carries the syllabus level id, so match that first.
+ * The old text comparison only runs when the id does not match a level.
+ */
+function findLevelByIdOrName(
+  levels: SyllabusLevel[],
+  targetId: string | null,
+  targetName: string | null,
+): SyllabusLevel | null {
+  if (targetId) {
+    const byId = levels.find((level) => String(level.id) === String(targetId))
+
+    if (byId) {
+      return byId
+    }
+  }
+
+  const normalizedTarget = normalizeComparableValue(targetName)
+
+  if (!normalizedTarget) {
+    return null
+  }
+
+  return (
+    levels.find((level) =>
+      [level.name, level.title, level.description, String(level.id)].some(
+        (value) => normalizeComparableValue(value) === normalizedTarget,
+      ),
+    ) ?? null
+  )
 }
 
 function getTopicGlyph(topic: SyllabusTopic) {
@@ -90,12 +145,28 @@ function getTopicGlyph(topic: SyllabusTopic) {
   return '⌘'
 }
 
-function getLevelIndex(levels: SyllabusLevel[], targetId: string | number | null) {
-  if (!targetId) {
-    return -1
+function getConceptsLessons(concepts: SyllabusConcept[]): SyllabusLesson[] {
+  return concepts.flatMap((concept) => concept.lessons ?? [])
+}
+
+function getNextLesson(concepts: SyllabusConcept[]): SyllabusLesson | null {
+  return getConceptsLessons(concepts).find((lesson) => lesson.status === 'AVAILABLE') ?? null
+}
+
+function getLevelLessons(level: SyllabusLevel | null): SyllabusLesson[] {
+  return level ? level.topics.flatMap((topic) => getConceptsLessons(topic.concepts)) : []
+}
+
+function getLessonStatusLabel(lesson: SyllabusLesson) {
+  if (lesson.status === 'COMPLETED') {
+    return 'Completed'
   }
 
-  return levels.findIndex((level) => String(level.id) === String(targetId))
+  if (lesson.status === 'AVAILABLE') {
+    return 'Available'
+  }
+
+  return 'Locked'
 }
 
 function renderNavIcon(name: string) {
@@ -124,27 +195,6 @@ function renderNavIcon(name: string) {
           <path d="M8 10h8M8 13.5h8M8 17h5" />
         </svg>
       )
-    case 'practice':
-      return (
-        <svg {...commonProps} aria-hidden="true">
-          <circle cx="12" cy="12" r="6.5" />
-          <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
-          <path d="M8.5 8.5 15.5 15.5M15.5 8.5 8.5 15.5" />
-        </svg>
-      )
-    case 'projects':
-      return (
-        <svg {...commonProps} aria-hidden="true">
-          <path d="M4.5 9.5h15M7 6.5h10a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 17 18.5H7A1.5 1.5 0 0 1 5.5 17V8A1.5 1.5 0 0 1 7 6.5Z" />
-          <path d="M9 4.5h6" />
-        </svg>
-      )
-    case 'ranks':
-      return (
-        <svg {...commonProps} aria-hidden="true">
-          <path d="M9 17.5V9.5M12 17.5V6.5M15 17.5v-8M5 17.5h14" />
-        </svg>
-      )
     case 'profile':
       return (
         <svg {...commonProps} aria-hidden="true">
@@ -157,23 +207,110 @@ function renderNavIcon(name: string) {
   }
 }
 
+function LockIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="5.5" y="10.5" width="13" height="9" rx="2" />
+      <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
+    </svg>
+  )
+}
+
+function PlayIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M9 6.5v11l8.5-5.5L9 6.5Z" />
+    </svg>
+  )
+}
+
+function SyllabusSidebar({
+  canLearn,
+  onLearn,
+  onProfile,
+}: {
+  canLearn: boolean
+  onLearn: () => void
+  onProfile: () => void
+}) {
+  return (
+    <aside className="syllabus-sidebar">
+      <div className="syllabus-brand">
+        <div className="syllabus-brand-mark">◉</div>
+        <span>CodeLingo</span>
+      </div>
+
+      <nav className="syllabus-nav" aria-label="Main navigation">
+        <button
+          type="button"
+          className="syllabus-nav-item"
+          onClick={onLearn}
+          disabled={!canLearn}
+        >
+          <span className="syllabus-nav-icon">{renderNavIcon('learn')}</span>
+          <span>LEARN</span>
+        </button>
+
+        <button
+          type="button"
+          className="syllabus-nav-item active"
+          aria-current="page"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <span className="syllabus-nav-icon">{renderNavIcon('syllabus')}</span>
+          <span>SYLLABUS</span>
+        </button>
+
+        <button type="button" className="syllabus-nav-item" onClick={onProfile}>
+          <span className="syllabus-nav-icon">{renderNavIcon('profile')}</span>
+          <span>PROFILE</span>
+        </button>
+      </nav>
+    </aside>
+  )
+}
+
 export function SyllabusPage() {
   const location = useLocation()
+  const navigate = useNavigate()
   const routeState = (location.state as RouteState | undefined) ?? undefined
+
+  const progress = useProgress()
+  const { refresh: refreshProgress } = progress
+
   const [levels, setLevels] = useState<SyllabusLevel[]>([])
-  const [expandedLevelId, setExpandedLevelId] = useState<string | null>(null)
-  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [reloadToken, setReloadToken] = useState(0)
+  const [selectedLevelId, setSelectedLevelId] = useState<string | null>(null)
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null)
 
-  const recommendedLevelName = useMemo(() => {
+  const recommended = useMemo(() => {
     const savedResult = readSavedResult()
     const routeResult = routeState?.result ?? null
-    const routeLevel = routeState?.startingLevel ?? readStartingLevelName(routeResult) ?? routeResult?.level
-    const fallback = readStartingLevelName(savedResult) ?? savedResult?.level
-    return routeLevel ?? fallback ?? null
+
+    return {
+      id: readStartingLevelId(routeResult) ?? readStartingLevelId(savedResult),
+      name:
+        routeState?.startingLevel ??
+        readStartingLevelTitle(routeResult) ??
+        routeResult?.level ??
+        readStartingLevelTitle(savedResult) ??
+        savedResult?.level ??
+        null,
+    }
   }, [routeState])
 
+  // Refetch whenever this route is (re)entered, e.g. when the learner comes
+  // back from a lesson and lesson statuses have changed.
   useEffect(() => {
     let isActive = true
 
@@ -208,310 +345,312 @@ export function SyllabusPage() {
     return () => {
       isActive = false
     }
-  }, [])
+  }, [location.href, reloadToken])
+
+  const previousLocationHref = useRef(location.href)
 
   useEffect(() => {
-    if (levels.length === 0) {
+    if (previousLocationHref.current === location.href) {
       return
     }
 
-    const recommendedMatch = levels.find((level) => {
-      const normalizedTarget = normalizeComparableValue(recommendedLevelName)
-      const normalizedLevel = normalizeComparableValue(level.name)
-      const normalizedTitle = normalizeComparableValue(level.title)
-      const normalizedDescription = normalizeComparableValue(level.description)
+    previousLocationHref.current = location.href
+    void refreshProgress()
+  }, [location.href, refreshProgress])
 
-      return normalizedTarget.length > 0 && (
-        normalizedLevel === normalizedTarget ||
-        normalizedTitle === normalizedTarget ||
-        normalizedDescription === normalizedTarget ||
-        String(level.id).toLowerCase() === normalizedTarget
-      )
-    })
+  const recommendedLevel = useMemo(
+    () => findLevelByIdOrName(levels, recommended.id, recommended.name),
+    [levels, recommended.id, recommended.name],
+  )
 
-    const nextLevelId = recommendedMatch?.id ?? levels[0].id
-
-    setExpandedLevelId((currentId) => {
-      if (!currentId || getLevelIndex(levels, currentId) === -1) {
-        return String(nextLevelId)
-      }
-
-      return currentId
-    })
-  }, [levels, recommendedLevelName])
-
-  const activeLevel = useMemo(() => {
-    if (!levels.length) {
-      return null
-    }
-
-    const selected = getLevelIndex(levels, expandedLevelId)
-    return levels[selected >= 0 ? selected : 0]
-  }, [expandedLevelId, levels])
-
-  useEffect(() => {
-    if (!activeLevel) {
-      setSelectedTopicId(null)
-      return
-    }
-
-    if (!activeLevel.topics.length) {
-      setSelectedTopicId(null)
-      return
-    }
-
-    setSelectedTopicId((currentId) => {
-      if (currentId && activeLevel.topics.some((topic) => String(topic.id) === String(currentId))) {
-        return currentId
-      }
-
-      return String(activeLevel.topics[0].id)
-    })
-  }, [activeLevel])
+  const activeLevel = useMemo(
+    () =>
+      levels.find((level) => String(level.id) === String(selectedLevelId)) ??
+      recommendedLevel ??
+      levels[0] ??
+      null,
+    [levels, recommendedLevel, selectedLevelId],
+  )
 
   const activeTopic = useMemo(() => {
-    if (!activeLevel || !activeLevel.topics.length) {
+    if (!activeLevel) {
       return null
     }
 
-    return activeLevel.topics.find((topic) => String(topic.id) === String(selectedTopicId)) ?? activeLevel.topics[0]
+    return (
+      activeLevel.topics.find((topic) => String(topic.id) === String(selectedTopicId)) ??
+      activeLevel.topics[0] ??
+      null
+    )
   }, [activeLevel, selectedTopicId])
 
-  const toggleLevel = (levelId: string | number) => {
-    setExpandedLevelId((currentId) => (currentId === String(levelId) ? null : String(levelId)))
-  }
+  const activeTopicConcepts = activeTopic?.concepts ?? []
 
-  const activeTopicConcepts = useMemo<SyllabusConcept[]>(() => {
-    if (!activeTopic) {
-      return []
-    }
+  const nextLesson = useMemo(() => {
+    const preferred = recommendedLevel
+      ? getLevelLessons(recommendedLevel).find((lesson) => lesson.status === 'AVAILABLE')
+      : null
 
-    return activeTopic.concepts ?? []
-  }, [activeTopic])
-
-  if (isLoading) {
     return (
-      <main className="syllabus-page">
-        <aside className="syllabus-sidebar">
-          <div className="syllabus-brand">
-            <div className="syllabus-brand-mark">◉</div>
-            <span>CodeLingo</span>
-          </div>
-          <nav className="syllabus-nav" aria-label="Main navigation">
-            {['learn', 'syllabus', 'practice', 'projects', 'ranks', 'profile'].map((item) => (
-              <button key={item} type="button" className={`syllabus-nav-item ${item === 'syllabus' ? 'active' : ''}`}>
-                <span className="syllabus-nav-icon">{renderNavIcon(item)}</span>
-                <span>{item === 'learn' ? 'LEARN' : item.toUpperCase()}</span>
-              </button>
-            ))}
-          </nav>
-        </aside>
-
-        <section className="syllabus-content">
-          <div className="syllabus-shell">
-            <div className="syllabus-loading">Loading syllabus…</div>
-          </div>
-        </section>
-      </main>
+      preferred ??
+      levels.flatMap((level) => getLevelLessons(level)).find(
+        (lesson) => lesson.status === 'AVAILABLE',
+      ) ??
+      null
     )
+  }, [levels, recommendedLevel])
+
+  const topicNextLesson = getNextLesson(activeTopicConcepts)
+
+  const openLesson = (lesson: SyllabusLesson) => {
+    navigate({
+      to: '/lesson/$lessonId',
+      params: { lessonId: String(lesson.id) },
+    })
   }
 
-  if (error) {
-    return (
-      <main className="syllabus-page">
-        <aside className="syllabus-sidebar">
-          <div className="syllabus-brand">
-            <div className="syllabus-brand-mark">◉</div>
-            <span>CodeLingo</span>
-          </div>
-          <nav className="syllabus-nav" aria-label="Main navigation">
-            {['learn', 'syllabus', 'practice', 'projects', 'ranks', 'profile'].map((item) => (
-              <button key={item} type="button" className={`syllabus-nav-item ${item === 'syllabus' ? 'active' : ''}`}>
-                <span className="syllabus-nav-icon">{renderNavIcon(item)}</span>
-                <span>{item === 'learn' ? 'LEARN' : item.toUpperCase()}</span>
-              </button>
-            ))}
-          </nav>
-        </aside>
+  const retryLoad = () => {
+    setIsLoading(true)
+    setError('')
+    setReloadToken((token) => token + 1)
+  }
 
-        <section className="syllabus-content">
-          <div className="syllabus-shell">
+  const handleLearn = () => {
+    if (nextLesson) {
+      openLesson(nextLesson)
+    }
+  }
+
+  return (
+    <main className="syllabus-page">
+      <SyllabusSidebar
+        canLearn={Boolean(nextLesson)}
+        onLearn={handleLearn}
+        onProfile={() => navigate({ to: '/profile' })}
+      />
+
+      <section className="syllabus-content">
+        <div className="syllabus-shell">
+          {isLoading ? (
+            <div className="syllabus-loading">Loading syllabus…</div>
+          ) : error ? (
             <div className="syllabus-state-card syllabus-error">
               <h2>Syllabus unavailable</h2>
               <p>{error}</p>
-              <button type="button" onClick={() => window.location.reload()}>
+              <button type="button" onClick={retryLoad}>
                 Retry
               </button>
             </div>
-          </div>
-        </section>
-      </main>
-    )
-  }
-
-  if (levels.length === 0) {
-    return (
-      <main className="syllabus-page">
-        <aside className="syllabus-sidebar">
-          <div className="syllabus-brand">
-            <div className="syllabus-brand-mark">◉</div>
-            <span>CodeLingo</span>
-          </div>
-          <nav className="syllabus-nav" aria-label="Main navigation">
-            {['learn', 'syllabus', 'practice', 'projects', 'ranks', 'profile'].map((item) => (
-              <button key={item} type="button" className={`syllabus-nav-item ${item === 'syllabus' ? 'active' : ''}`}>
-                <span className="syllabus-nav-icon">{renderNavIcon(item)}</span>
-                <span>{item === 'learn' ? 'LEARN' : item.toUpperCase()}</span>
-              </button>
-            ))}
-          </nav>
-        </aside>
-
-        <section className="syllabus-content">
-          <div className="syllabus-shell">
+          ) : levels.length === 0 ? (
             <div className="syllabus-state-card syllabus-empty">
               <h2>No syllabus content yet</h2>
               <p>The backend has not published any syllabus levels for this account.</p>
             </div>
-          </div>
-        </section>
-      </main>
-    )
-  }
-
-  const recommendedLevel = levels.find((level) => {
-    const target = normalizeComparableValue(recommendedLevelName)
-    if (!target) {
-      return false
-    }
-
-    return (
-      normalizeComparableValue(level.name) === target ||
-      normalizeComparableValue(level.title) === target ||
-      normalizeComparableValue(level.description) === target ||
-      String(level.id).toLowerCase() === target
-    )
-  })
-
-  return (
-    <main className="syllabus-page">
-      <aside className="syllabus-sidebar">
-        <div className="syllabus-brand">
-          <div className="syllabus-brand-mark">◉</div>
-          <span>CodeLingo</span>
-        </div>
-
-        <nav className="syllabus-nav" aria-label="Main navigation">
-          {['learn', 'syllabus', 'practice', 'projects', 'ranks', 'profile'].map((item) => (
-            <button key={item} type="button" className={`syllabus-nav-item ${item === 'syllabus' ? 'active' : ''}`}>
-              <span className="syllabus-nav-icon">{renderNavIcon(item)}</span>
-              <span>{item === 'learn' ? 'LEARN' : item.toUpperCase()}</span>
-            </button>
-          ))}
-        </nav>
-      </aside>
-
-      <section className="syllabus-content">
-        <div className="syllabus-shell">
-          <div className="syllabus-tabs" aria-label="Available syllabus levels">
-            {levels.map((level, index) => {
-              const isActive = activeLevel !== null && String(level.id) === String(activeLevel.id)
-              const badgeTitle = recommendedLevel && String(level.id) === String(recommendedLevel.id) ? 'Recommended start' : undefined
-
-              return (
-                <button
-                  key={String(level.id)}
-                  type="button"
-                  className={`syllabus-tab ${isActive ? 'active' : ''}`}
-                  aria-pressed={isActive}
-                  aria-label={`Open ${level.name}`}
-                  onClick={() => toggleLevel(level.id)}
-                  title={badgeTitle}
-                >
-                  <span className="syllabus-tab-number">{index + 1}</span>
-                  <span className="syllabus-tab-name">{formatLevelLabel(level.name)}</span>
-                  {recommendedLevel && String(level.id) === String(recommendedLevel.id) ? (
-                    <span className="syllabus-tab-star" aria-hidden="true">★</span>
-                  ) : null}
-                </button>
-              )
-            })}
-          </div>
-
-          {activeLevel ? (
-            <article className="syllabus-level-card" aria-live="polite">
-              <header className="syllabus-level-header">
-                <div className="syllabus-level-badges">
-                  <span className="syllabus-level-tag">LEVEL {levels.findIndex((level) => String(level.id) === String(activeLevel.id)) + 1}</span>
-                  {recommendedLevel && String(activeLevel.id) === String(recommendedLevel.id) ? (
-                    <span className="syllabus-recommended-badge">Recommended start</span>
-                  ) : null}
+          ) : (
+            <>
+              <header className="syllabus-topbar">
+                <div className="syllabus-topbar-copy">
+                  <p className="syllabus-topbar-eyebrow">Your learning path</p>
+                  <h1 className="syllabus-topbar-title">
+                    {activeLevel ? formatLevelLabel(activeLevel.name) : 'Syllabus'}
+                  </h1>
                 </div>
 
-                <div className="syllabus-level-title-row">
-                  <h1>
-                    {formatLevelLabel(activeLevel.name)}
-                    {activeLevel.description ? ` · ${activeLevel.description}` : ''}
-                  </h1>
-                  <button type="button" className="syllabus-start-button">START</button>
+                <div className="syllabus-topbar-actions">
+                  <span className="syllabus-stat syllabus-stat-xp">{progress.totalXp} XP</span>
+                  <span
+                    className="syllabus-stat syllabus-stat-streak"
+                    title={`${progress.currentStreak} day streak`}
+                  >
+                    <span aria-hidden="true">🔥</span> {progress.currentStreak}
+                  </span>
+                  <button
+                    type="button"
+                    className="syllabus-continue-cta"
+                    onClick={handleLearn}
+                    disabled={!nextLesson}
+                    title={nextLesson ? `Start ${nextLesson.title}` : 'All lessons complete'}
+                  >
+                    Continue <span aria-hidden="true">→</span>
+                  </button>
                 </div>
               </header>
 
-              <div className="syllabus-map-layout">
-                <div className="syllabus-topic-list">
-                  {activeLevel.topics.length > 0 ? (
-                    activeLevel.topics.map((topic) => {
-                      const isSelected = !!activeTopic && String(topic.id) === String(activeTopic.id)
+              <div className="syllabus-tabs" aria-label="Available syllabus levels">
+                {levels.map((level, index) => {
+                  const isActive = activeLevel !== null && String(level.id) === String(activeLevel.id)
+                  const isRecommended =
+                    recommendedLevel !== null && String(level.id) === String(recommendedLevel.id)
 
-                      return (
-                        <button
-                          key={String(topic.id)}
-                          type="button"
-                          className={`syllabus-topic-item ${isSelected ? 'selected' : ''}`}
-                          onClick={() => setSelectedTopicId(String(topic.id))}
-                        >
-                          <div className="syllabus-topic-visual" aria-hidden="true">
-                            <span>{getTopicGlyph(topic)}</span>
-                          </div>
-                          <div className="syllabus-topic-label">{topic.name}</div>
-                        </button>
-                      )
-                    })
-                  ) : (
-                    <div className="syllabus-state-card syllabus-empty inline">
-                      <p>No topics are available for this level yet.</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="syllabus-topic-detail" aria-live="polite">
-                  {activeTopic ? (
-                    <>
-                      <div className="syllabus-detail-icon" aria-hidden="true">
-                        <span>{getTopicGlyph(activeTopic)}</span>
-                      </div>
-                      <h2>{activeTopic.name}</h2>
-                      {activeTopicConcepts.length > 0 ? (
-                        <ul className="syllabus-detail-list">
-                          {activeTopicConcepts.map((concept) => (
-                            <li key={String(concept.id)}>
-                              <span className="syllabus-detail-dot" aria-hidden="true" />
-                              {concept.name}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="syllabus-detail-empty">
-                          {activeTopic.description ?? 'Concepts for this topic are coming soon.'}
-                        </p>
-                      )}
-                      <button type="button" className="syllabus-topic-button">START TOPIC</button>
-                    </>
-                  ) : null}
-                </div>
+                  return (
+                    <button
+                      key={String(level.id)}
+                      type="button"
+                      className={`syllabus-tab ${isActive ? 'active' : ''}`}
+                      aria-pressed={isActive}
+                      aria-label={`Open ${level.name}`}
+                      onClick={() => setSelectedLevelId(String(level.id))}
+                      title={isRecommended ? 'Recommended start' : undefined}
+                    >
+                      <span className="syllabus-tab-number">{index + 1}</span>
+                      <span className="syllabus-tab-name">{formatLevelLabel(level.name)}</span>
+                      {isRecommended ? (
+                        <span className="syllabus-tab-star" aria-hidden="true">
+                          ★
+                        </span>
+                      ) : null}
+                    </button>
+                  )
+                })}
               </div>
-            </article>
-          ) : null}
+
+              {activeLevel ? (
+                <article className="syllabus-level-card" aria-live="polite">
+                  <header className="syllabus-level-header">
+                    <div className="syllabus-level-badges">
+                      <span className="syllabus-level-tag">
+                        LEVEL{' '}
+                        {levels.findIndex((level) => String(level.id) === String(activeLevel.id)) + 1}
+                      </span>
+                      {recommendedLevel &&
+                      String(activeLevel.id) === String(recommendedLevel.id) ? (
+                        <span className="syllabus-recommended-badge">Recommended start</span>
+                      ) : null}
+                    </div>
+
+                    <div className="syllabus-level-title-row">
+                      <h1>
+                        {formatLevelLabel(activeLevel.name)}
+                        {activeLevel.description ? ` · ${activeLevel.description}` : ''}
+                      </h1>
+                    </div>
+                  </header>
+
+                  <div className="syllabus-map-layout">
+                    <div className="syllabus-topic-list">
+                      {activeLevel.topics.length > 0 ? (
+                        activeLevel.topics.map((topic) => {
+                          const isSelected =
+                            !!activeTopic && String(topic.id) === String(activeTopic.id)
+
+                          return (
+                            <button
+                              key={String(topic.id)}
+                              type="button"
+                              className={`syllabus-topic-item ${isSelected ? 'selected' : ''}`}
+                              onClick={() => setSelectedTopicId(String(topic.id))}
+                            >
+                              <div className="syllabus-topic-visual" aria-hidden="true">
+                                <span>{getTopicGlyph(topic)}</span>
+                              </div>
+                              <div className="syllabus-topic-label">{topic.name}</div>
+                            </button>
+                          )
+                        })
+                      ) : (
+                        <div className="syllabus-state-card syllabus-empty inline">
+                          <p>No topics are available for this level yet.</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="syllabus-topic-detail" aria-live="polite">
+                      {activeTopic ? (
+                        <>
+                          <div className="syllabus-detail-icon" aria-hidden="true">
+                            <span>{getTopicGlyph(activeTopic)}</span>
+                          </div>
+                          <h2>{activeTopic.name}</h2>
+
+                          {activeTopicConcepts.length > 0 ? (
+                            <ul className="syllabus-detail-list">
+                              {activeTopicConcepts.map((concept) => (
+                                <li key={String(concept.id)} className="syllabus-concept-block">
+                                  <div className="syllabus-concept-title">
+                                    <span className="syllabus-detail-dot" aria-hidden="true" />
+                                    {concept.name}
+                                  </div>
+
+                                  {concept.lessons.length > 0 ? (
+                                    <div className="syllabus-lesson-list">
+                                      {concept.lessons.map((lesson) => {
+                                        const isLocked = lesson.status === 'LOCKED'
+                                        const statusLabel = getLessonStatusLabel(lesson)
+
+                                        return (
+                                          <span
+                                            key={String(lesson.id)}
+                                            className="syllabus-lesson-shell"
+                                            title={isLocked ? LOCKED_TOOLTIP : undefined}
+                                          >
+                                            <button
+                                              type="button"
+                                              className={`syllabus-lesson syllabus-lesson-${lesson.status.toLowerCase()}`}
+                                              onClick={() => openLesson(lesson)}
+                                              disabled={isLocked}
+                                              aria-label={`${lesson.title}, ${statusLabel}, ${lesson.xpReward} XP`}
+                                            >
+                                              <span
+                                                className="syllabus-lesson-icon"
+                                                aria-hidden="true"
+                                              >
+                                                {lesson.status === 'COMPLETED' ? (
+                                                  '✓'
+                                                ) : isLocked ? (
+                                                  <LockIcon />
+                                                ) : (
+                                                  <PlayIcon />
+                                                )}
+                                              </span>
+
+                                              <span className="syllabus-lesson-copy">
+                                                <span className="syllabus-lesson-title">
+                                                  {lesson.title}
+                                                </span>
+                                                <span className="syllabus-lesson-meta">
+                                                  {statusLabel} · {lesson.xpReward} XP
+                                                </span>
+                                              </span>
+
+                                              {lesson.status === 'COMPLETED' ? (
+                                                <span className="syllabus-lesson-action">
+                                                  Replay
+                                                </span>
+                                              ) : null}
+                                            </button>
+                                          </span>
+                                        )
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <p className="syllabus-lesson-empty">Coming soon</p>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="syllabus-detail-empty">
+                              {activeTopic.description ?? 'Concepts for this topic are coming soon.'}
+                            </p>
+                          )}
+
+                          {topicNextLesson ? (
+                            <button
+                              type="button"
+                              className="syllabus-topic-button"
+                              onClick={() => openLesson(topicNextLesson)}
+                            >
+                              START TOPIC
+                            </button>
+                          ) : null}
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+                </article>
+              ) : null}
+            </>
+          )}
         </div>
       </section>
 

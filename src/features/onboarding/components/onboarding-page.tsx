@@ -52,13 +52,6 @@ export function OnboardingPage() {
   const canContinue = !step.answerKey || Boolean(currentAnswer)
 
   const submitOnboarding = async () => {
-    const token = localStorage.getItem('token')
-
-    if (!token) {
-      navigate({ to: '/login' })
-      return
-    }
-
     if (isSubmitting) {
       return
     }
