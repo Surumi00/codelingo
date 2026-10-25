@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import axios from 'axios'
+import { getErrorStatus } from '../../../api/client'
+import { getMe } from '../../../api/auth'
+import { getDiagnosticResult } from '../../../api/diagnostic'
 import './profile-page.css'
 
 type ProfileData = {
@@ -227,13 +229,9 @@ export function ProfilePage() {
 
     const fetchProfile = async () => {
       try {
-        const profileResponse = await axios.get('http://localhost:3000/auth/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const profileData = await getMe()
 
-        const user = profileResponse.data?.user ?? profileResponse.data ?? {}
+        const user = profileData?.user ?? profileData ?? {}
 
         const nextProfile: ProfileData = {
           name: user.name ?? '',
@@ -253,13 +251,7 @@ export function ProfilePage() {
       }
 
       try {
-        const diagnosisResponse = await axios.get('http://localhost:3000/diagnostic/result', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        const payload = diagnosisResponse.data
+        const payload = await getDiagnosticResult()
 
         if (!payload || (typeof payload === 'object' && Object.keys(payload).length === 0)) {
           setDiagnosis(null)
@@ -268,7 +260,7 @@ export function ProfilePage() {
 
         setDiagnosis(normalizeDiagnosis(payload))
       } catch (error) {
-        const status = axios.isAxiosError(error) ? error.response?.status : null
+        const status = getErrorStatus(error)
 
         if (status === 404 || status === 204 || status === 400 || status === 422) {
           setDiagnosis(null)

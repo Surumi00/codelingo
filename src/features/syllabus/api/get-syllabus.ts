@@ -1,8 +1,5 @@
-import axios from 'axios'
+import { getSyllabus } from '../../../api/syllabus'
 import type { SyllabusConcept, SyllabusLevel, SyllabusTopic } from '../types'
-
-const API_BASE_URL = 'http://localhost:3000'
-const SYLLABUS_ENDPOINT = `${API_BASE_URL}/api/syllabus`
 
 function readString(value: unknown): string | undefined {
   if (typeof value === 'string' && value.trim().length > 0) {
@@ -142,10 +139,7 @@ function extractLevels(payload: unknown): SyllabusLevel[] {
 }
 
 export async function getSyllabusLevels(): Promise<SyllabusLevel[]> {
-  const token = typeof localStorage === 'undefined' ? null : localStorage.getItem('token')
-  const headers = token ? { Authorization: `Bearer ${token}` } : undefined
+  const payload = await getSyllabus()
 
-  const response = await axios.get<unknown>(SYLLABUS_ENDPOINT, { headers })
-
-  return extractLevels(response.data)
+  return extractLevels(payload)
 }

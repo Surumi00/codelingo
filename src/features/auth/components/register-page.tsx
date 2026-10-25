@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react'
-import axios from 'axios'
+import { register } from '../../../api/auth'
 import characterImage from '../../../assets/characters/excited.png'
 import './register-page.css'
 
@@ -55,14 +55,13 @@ export function RegisterPage() {
       return
     }
 
-    axios
-      .post('http://localhost:3000/auth/register', {
-        name: input.name.trim(),
-        email: input.email.trim(),
-        password: input.password,
-      })
+    register({
+      name: input.name.trim(),
+      email: input.email.trim(),
+      password: input.password,
+    })
       .then((response) => {
-        console.log(response.data)
+        console.log(response)
         setStatus('Registration successful!')
         alert('Registration successful! You can now log in.')
       })

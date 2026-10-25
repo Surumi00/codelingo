@@ -111,7 +111,7 @@ export function DiagnosticResultsPage() {
     <main className="diagnostic-results-page">
       <div className="diagnostic-results-shell">
         <header className="results-heading">
-          <p className="diagnostic-results-kicker">CodeLingo · Diagnostic review</p>
+          
           <h1>Diagnostic complete</h1>
         </header>
 

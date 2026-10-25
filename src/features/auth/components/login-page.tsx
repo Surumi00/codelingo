@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import axios from 'axios'
+import { login } from '../../../api/auth'
 import characterImage from '../../../assets/characters/happy.png'
 import './login-page.css'
 
@@ -26,11 +26,11 @@ export function LoginPage() {
 
     console.log(input)
 
-    axios.post('http://localhost:3000/auth/login', input)
+    login(input)
       .then((res) => {
-        console.log(res.data)
+        console.log(res)
         setStatus('Login successful!')
-        localStorage.setItem('token', res.data.token)
+        localStorage.setItem('token', res.token)
         // Navigate to onboarding after successful login
         navigate({ to: '/onboarding' })
       })

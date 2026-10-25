@@ -186,7 +186,7 @@
   font-size: 1rem;
   font-weight: 800;
   opacity: 0.62;
-  cursor: not-allowed;
+  cursor: pointer;
 }
 
 .results-learning-action button span {

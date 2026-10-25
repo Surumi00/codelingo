@@ -1,16 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import axios from 'axios'
-import type { DiagnosticSubmitResponse } from '../types'
+import {
+  getDiagnosticQuestions,
+  submitDiagnostic as submitDiagnosticRequest,
+  type DiagnosticQuestion,
+} from '../../../api/diagnostic'
 import './diagnostic-page.css'
-
-type DiagnosticQuestion = {
-  id: number
-  conceptSlug: string
-  difficulty: string
-  prompt: string
-  options: string[]
-}
 
 type DiagnosticAnswerMap = Record<number, number>
 
@@ -44,16 +39,9 @@ export function DiagnosticPage() {
       }
 
       try {
-        const response = await axios.get<{ questions?: DiagnosticQuestion[] }>(
-          'http://localhost:3000/diagnostic/questions',
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        )
+        const data = await getDiagnosticQuestions()
 
-        const nextQuestions = Array.isArray(response.data?.questions) ? response.data.questions : []
+        const nextQuestions = Array.isArray(data?.questions) ? data.questions : []
 
         if (!isMounted) {
           return
@@ -161,24 +149,12 @@ export function DiagnosticPage() {
     setSubmitError('')
 
     try {
-      const payload = {
-        answers: questions.map((question) => ({
-          questionId: question.id,
-          selectedOptionIndex: selectedAnswers[question.id],
-        })),
-      }
+      const answers = questions.map((question) => ({
+        questionId: question.id,
+        selectedOptionIndex: selectedAnswers[question.id],
+      }))
 
-      const response = await axios.post<DiagnosticSubmitResponse>(
-        'http://localhost:3000/diagnostic/submit',
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      )
-
-      const result = response.data
+      const result = await submitDiagnosticRequest(answers)
       localStorage.setItem('diagnostic_result', JSON.stringify(result))
       navigate({ to: '/diagnostic/results', state: { result } })
     } catch (submitErrorState) {

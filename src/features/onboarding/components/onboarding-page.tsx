@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import axios from 'axios'
+import {
+  saveOnboarding,
+  type OnboardingAnswerKey,
+  type OnboardingAnswers,
+} from '../../../api/onboarding'
 import { onboardingData, type OnboardingStep } from '../../../mocks/onboarding-data'
 import happyCharacter from '../../../assets/characters/happy.png'
 import hiCharacter from '../../../assets/characters/hi.png'
@@ -9,10 +13,6 @@ const characterAssets = {
   happy: happyCharacter,
   hi: hiCharacter,
 } as const
-
-type AnswerKey = 'occupation' | 'experienceLevel' | 'language'
-
-type OnboardingAnswers = Record<AnswerKey, string>
 
 const initialAnswers: OnboardingAnswers = {
   occupation: '',
@@ -41,7 +41,7 @@ export function OnboardingPage() {
     setCurrentStep((previousStep) => previousStep + 1)
   }
 
-  const handleAnswerSelect = (key: AnswerKey, value: string) => {
+  const handleAnswerSelect = (key: OnboardingAnswerKey, value: string) => {
     setAnswers((previousAnswers) => ({
       ...previousAnswers,
       [key]: value,
@@ -67,9 +67,7 @@ export function OnboardingPage() {
     setSubmitError('')
 
     try {
-      await axios.post('http://localhost:3000/me/onboarding', answers, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      await saveOnboarding(answers)
 
       navigate({ to: '/diagnostic' })
     } catch (error) {
