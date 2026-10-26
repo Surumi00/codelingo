@@ -160,6 +160,10 @@ const answerKeys: Record<string, AnswerKey> = {
 // sessionId -> exerciseId -> whether the first attempt was correct.
 const firstAttemptsBySession = new Map<string, Map<string, boolean>>()
 
+// sessionId -> set of exercise IDs the learner has completed (answered
+// correctly) so an interrupted lesson can resume where the learner stopped.
+const completedBySession = new Map<string, Set<string>>()
+
 function attemptsFor(sessionId: string): Map<string, boolean> {
   const existing = firstAttemptsBySession.get(sessionId)
 
@@ -233,23 +237,25 @@ function isCorrect(exerciseId: string, answer: ExerciseAnswer): boolean {
 export async function mockGetLesson(lessonId: string): Promise<LessonDetail> {
   await delay()
 
-  if (lessonId !== MOCK_LESSON_ID) {
-    throw new Error('Lesson not found')
+  // In demo mode any lesson id resolves to the sample lesson so the syllabus
+  // can link to every lesson without a live backend.
+  return {
+    ...structuredClone(mockLesson),
+    id: lessonId,
   }
-
-  return structuredClone(mockLesson)
 }
 
-export async function mockStartLesson(lessonId: string): Promise<StartLessonResponse> {
+export async function mockStartLesson(_lessonId: string): Promise<StartLessonResponse> {
   await delay(80)
 
-  if (lessonId !== MOCK_LESSON_ID) {
-    throw new Error('Lesson not found')
+  // Resume: return the exercises this session already answered correctly so
+  // the frontend can skip them and continue where the learner stopped.
+  const completed = completedBySession.get(MOCK_SESSION_ID) ?? new Set<string>()
+
+  return {
+    sessionId: MOCK_SESSION_ID,
+    completedExerciseIds: [...completed],
   }
-
-  firstAttemptsBySession.delete(MOCK_SESSION_ID)
-
-  return { sessionId: MOCK_SESSION_ID }
 }
 
 export async function mockCheckExercise(
@@ -272,6 +278,16 @@ export async function mockCheckExercise(
     attempts.set(exerciseId, correct)
   }
 
+  // Remember that this exercise was completed so the lesson can resume here.
+  if (correct) {
+    const completed = completedBySession.get(sessionId)
+    if (completed) {
+      completed.add(exerciseId)
+    } else {
+      completedBySession.set(sessionId, new Set([exerciseId]))
+    }
+  }
+
   return {
     correct,
     explanation: key.explanation,
@@ -284,10 +300,6 @@ export async function mockCompleteLesson(
   sessionId: string,
 ): Promise<CompleteLessonResponse> {
   await delay(160)
-
-  if (lessonId !== MOCK_LESSON_ID) {
-    throw new Error('Lesson not found')
-  }
 
   const attempts = attemptsFor(sessionId)
   const firstTryCorrect = mockLesson.exercises.filter(
@@ -309,10 +321,19 @@ export async function mockCompleteLesson(
 export async function mockGetProgress(): Promise<UserProgress> {
   await delay(60)
 
+  // Two-week demo progress: 14-day streak, ~850 XP, and the first six lessons
+  // completed so the syllabus shows a mix of completed / available / locked.
   return {
-    totalXp: 145,
-    currentStreak: 4,
-    longestStreak: 9,
-    completedLessonIds: [],
+    totalXp: 850,
+    currentStreak: 14,
+    longestStreak: 14,
+    completedLessonIds: [
+      'python-fundamentals-1',
+      'python-fundamentals-2',
+      'python-fundamentals-3',
+      'python-fundamentals-4',
+      'python-fundamentals-5',
+      'python-fundamentals-6',
+    ],
   }
 }

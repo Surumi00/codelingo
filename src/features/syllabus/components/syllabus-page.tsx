@@ -386,9 +386,12 @@ export function SyllabusPage() {
 
   const activeTopicConcepts = activeTopic?.concepts ?? []
 
+  // Continue follows the level the learner is looking at (the selected tab,
+  // falling back to the recommended level), so Intermediate/Advanced tabs
+  // start a lesson from their own syllabus instead of the recommended one.
   const nextLesson = useMemo(() => {
-    const preferred = recommendedLevel
-      ? getLevelLessons(recommendedLevel).find((lesson) => lesson.status === 'AVAILABLE')
+    const preferred = activeLevel
+      ? getLevelLessons(activeLevel).find((lesson) => lesson.status === 'AVAILABLE')
       : null
 
     return (
@@ -398,7 +401,7 @@ export function SyllabusPage() {
       ) ??
       null
     )
-  }, [levels, recommendedLevel])
+  }, [levels, activeLevel])
 
   const topicNextLesson = getNextLesson(activeTopicConcepts)
 

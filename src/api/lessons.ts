@@ -90,6 +90,11 @@ export type CompleteLessonResponse = {
 
 export type StartLessonResponse = {
   sessionId: string
+  /**
+   * Exercises already answered correctly in this (resumed) session, so an
+   * interrupted lesson continues where the learner stopped.
+   */
+  completedExerciseIds?: string[]
 }
 
 export type UserProgress = {

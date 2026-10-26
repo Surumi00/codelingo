@@ -23,9 +23,21 @@ import celebratingMascot from '../../../assets/characters/celebrating.png'
 import happyMascot from '../../../assets/characters/happy.png'
 import sadMascot from '../../../assets/characters/sad.png'
 import thinkingMascot from '../../../assets/characters/thinking.png'
+import correctAnswerSound from '../../../assets/correct answer.mp3'
+import lessonCompleteSound from '../../../assets/one lesson complete.mp3'
+import wrongAnswerSound from '../../../assets/wrong answer.mp3'
 import './lesson-page.css'
 
 const MAX_RETRIES = 2
+
+// Short sound effects for answer feedback and lesson completion. Playback is
+// always triggered by a user action (Check / Continue), and a rejected
+// play() promise must never break the exercise flow.
+function playSound(src: string) {
+  const audio = new Audio(src)
+
+  void audio.play().catch(() => {})
+}
 
 type QueueEntry = {
   exercise: LessonExercise
@@ -108,10 +120,17 @@ export function LessonPage({ lessonId }: { lessonId: string }) {
           return
         }
 
+        const completedIds = new Set(session.completedExerciseIds ?? [])
+
         setLesson(detail)
         setSessionId(session.sessionId)
+        // Resume: drop exercises this session already answered correctly so
+        // the lesson continues from where the learner stopped.
+        setFinished(completedIds)
         setQueue(
-          detail.exercises.map((exercise) => ({ exercise, retries: 0, attempt: 0 })),
+          detail.exercises
+            .filter((exercise) => !completedIds.has(exercise.id))
+            .map((exercise) => ({ exercise, retries: 0, attempt: 0 })),
         )
       } catch (error) {
         if (!isActive) {
@@ -171,6 +190,7 @@ export function LessonPage({ lessonId }: { lessonId: string }) {
       const response = await checkExercise(current.exercise.id, sessionId, answer)
 
       setResult(response)
+      playSound(response.correct ? correctAnswerSound : wrongAnswerSound)
 
       if (response.correct) {
         setFinished((previous) => new Set(previous).add(current.exercise.id))
@@ -195,6 +215,7 @@ export function LessonPage({ lessonId }: { lessonId: string }) {
       const response = await completeLesson(lesson.id, sessionId)
 
       setCompletion(response)
+      playSound(lessonCompleteSound)
       refreshProgress()
     } catch {
       setCompleteError('We could not save your progress for this lesson.')
@@ -203,6 +224,27 @@ export function LessonPage({ lessonId }: { lessonId: string }) {
       setIsCompleting(false)
     }
   }
+
+  // A resumed session can already have every exercise answered correctly
+  // (the learner left just before pressing the final Continue); finish the
+  // lesson right away instead of showing an empty queue.
+  useEffect(() => {
+    if (
+      !lesson ||
+      !sessionId ||
+      isLoading ||
+      loadError ||
+      completion ||
+      isCompleting ||
+      completeError
+    ) {
+      return
+    }
+
+    if (totalExercises > 0 && finished.size >= totalExercises && queue.length === 0) {
+      void finishLesson()
+    }
+  })
 
   const handleContinue = () => {
     if (!current || !result) {
