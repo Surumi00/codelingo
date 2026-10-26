@@ -2,14 +2,6 @@ import { useEffect, useState } from 'react'
 import { CodeBlock } from './code-block'
 import type { ExerciseComponentProps } from '../types'
 
-function correctOptionIndex(result: ExerciseComponentProps['result']): number | null {
-  if (!result?.correctAnswer || !('selectedIndex' in result.correctAnswer)) {
-    return null
-  }
-
-  return result.correctAnswer.selectedIndex
-}
-
 export function ChoiceExercise({
   exercise,
   disabled,
@@ -18,7 +10,11 @@ export function ChoiceExercise({
 }: ExerciseComponentProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const options = exercise.options ?? []
-  const highlightedIndex = correctOptionIndex(result)
+
+  // Use result.correct directly (server sends correctAnswer only for incorrect answers)
+  // When answer is correct: result.correct = true, correctAnswer not sent
+  // When answer is incorrect: result.correct = false, correctAnswer IS sent
+  const isCorrect = result?.correct ?? false
 
   useEffect(() => {
     if (disabled || options.length === 0) {
@@ -70,16 +66,15 @@ export function ChoiceExercise({
     <div className="choice-list" role="radiogroup" aria-label="Answer options">
       {options.map((option, index) => {
         const isChosen = selectedIndex === index
-        const isCorrectOption = result !== null && highlightedIndex === index
         const classes = ['choice-option']
 
         if (!result && isChosen) {
           classes.push('is-selected')
         }
 
-        if (result && isCorrectOption) {
+        if (result && isChosen && isCorrect) {
           classes.push('is-correct')
-        } else if (result && isChosen) {
+        } else if (result && isChosen && !isCorrect) {
           classes.push('is-wrong')
         }
 
@@ -97,13 +92,13 @@ export function ChoiceExercise({
               {index + 1}
             </span>
             <CodeBlock code={option} className="choice-code" />
-            {result && isCorrectOption ? (
+            {result && isCorrect ? (
               <span className="choice-status">
                 <span aria-hidden="true">✓</span>{' '}
                 {isChosen ? 'Correct' : 'Correct answer'}
               </span>
             ) : null}
-            {result && isChosen && !isCorrectOption ? (
+            {result && isChosen && !isCorrect ? (
               <span className="choice-status">
                 <span aria-hidden="true">✕</span> Your answer
               </span>
