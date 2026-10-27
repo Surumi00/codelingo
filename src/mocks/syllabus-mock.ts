@@ -1,6 +1,6 @@
 /**
- * Mock syllabus for the two-week demo account. The first six lessons are
- * completed, lesson seven is available (the next one to start), and the rest
+ * Mock syllabus for the one-week demo account. The first four lessons are
+ * completed, lesson five is available (the next one to start), and the rest
  * are locked. The lesson statuses line up with `completedLessonIds` in the
  * progress mock so the syllabus and progress page stay consistent.
  */
@@ -84,21 +84,21 @@ export const DEMO_SYLLABUS = {
                   title: 'If Statements',
                   order: 1,
                   xpReward: 30,
-                  status: COMPLETED,
+                  status: AVAILABLE,
                 },
                 {
                   id: 'python-fundamentals-6',
                   title: 'Else If (Elif)',
                   order: 2,
                   xpReward: 30,
-                  status: COMPLETED,
+                  status: LOCKED,
                 },
                 {
                   id: 'python-fundamentals-7',
                   title: 'Comparison Operators',
                   order: 3,
                   xpReward: 30,
-                  status: AVAILABLE,
+                  status: LOCKED,
                 },
                 {
                   id: 'python-fundamentals-8',

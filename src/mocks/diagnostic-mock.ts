@@ -10,7 +10,7 @@ export const DEMO_DIAGNOSTIC_RESULT = {
   questionsAnswered: 15,
   level: 'BEGINNER' as DiagnosticLevel,
   insight:
-    "You've been practicing for two weeks and have a solid grasp of variables, " +
+    "You've been practicing for one week and have a solid grasp of variables, " +
     'loops, and functions. Keep going to strengthen OOP and data structures.',
   concepts: [
     { name: 'Variables', score: 4, status: 'Strong' },

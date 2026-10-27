@@ -321,19 +321,17 @@ export async function mockCompleteLesson(
 export async function mockGetProgress(): Promise<UserProgress> {
   await delay(60)
 
-  // Two-week demo progress: 14-day streak, ~850 XP, and the first six lessons
+  // One-week demo progress: 7-day streak, ~420 XP, and the first four lessons
   // completed so the syllabus shows a mix of completed / available / locked.
   return {
-    totalXp: 850,
-    currentStreak: 14,
-    longestStreak: 14,
+    totalXp: 420,
+    currentStreak: 7,
+    longestStreak: 7,
     completedLessonIds: [
       'python-fundamentals-1',
       'python-fundamentals-2',
       'python-fundamentals-3',
       'python-fundamentals-4',
-      'python-fundamentals-5',
-      'python-fundamentals-6',
     ],
   }
 }

@@ -1,5 +1,6 @@
 import api from './client'
 import type { DiagnosticSubmitResponse } from '../features/diagnostic/types'
+import { useMock } from '../lib/use-mock'
 import {
   mockGetDiagnosticQuestions,
   mockGetDiagnosticResult,
@@ -23,10 +24,8 @@ export type DiagnosticAnswer = {
   selectedOptionIndex: number
 }
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
-
 export function getDiagnosticQuestions(): Promise<DiagnosticQuestionsResponse> {
-  if (USE_MOCK) {
+  if (useMock()) {
     return mockGetDiagnosticQuestions()
   }
 
@@ -36,7 +35,7 @@ export function getDiagnosticQuestions(): Promise<DiagnosticQuestionsResponse> {
 }
 
 export function submitDiagnostic(answers: DiagnosticAnswer[]): Promise<DiagnosticSubmitResponse> {
-  if (USE_MOCK) {
+  if (useMock()) {
     return mockSubmitDiagnostic()
   }
 
@@ -47,7 +46,7 @@ export function submitDiagnostic(answers: DiagnosticAnswer[]): Promise<Diagnosti
 
 // The result payload is intentionally loose; the profile page normalizes it.
 export function getDiagnosticResult(): Promise<any> {
-  if (USE_MOCK) {
+  if (useMock()) {
     return mockGetDiagnosticResult()
   }
 

@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { register } from '../../../api/auth'
 import characterImage from '../../../assets/characters/excited.png'
 import './register-page.css'
@@ -61,6 +62,7 @@ function validate(input: RegisterInput): RegisterErrors {
 }
 
 export function RegisterPage() {
+  const navigate = useNavigate()
   const [input, setInput] = useState(initialInput)
   const [errors, setErrors] = useState<RegisterErrors>({})
   const [status, setStatus] = useState('')
@@ -72,7 +74,7 @@ export function RegisterPage() {
     setStatus('')
   }
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     const validationErrors = validate(input)
@@ -83,19 +85,35 @@ export function RegisterPage() {
       return
     }
 
-    register({
-      name: input.name.trim(),
-      email: input.email.trim(),
-      password: input.password,
-    })
-      .then((response) => {
-        console.log(response)
-        setStatus('Registration successful!')
-        alert('Registration successful! You can now log in.')
+    try {
+      const res = await register({
+        name: input.name.trim(),
+        email: input.email.trim(),
+        password: input.password,
       })
-      .catch((error) => {
-        setStatus(getRegisterErrorMessage(error))
-      })
+
+      // The mock backend returns { token, user }; a real backend may return a
+      // different shape, so normalize defensively.
+      const token = (res as { token?: string })?.token
+      const user = (res as { user?: { hasCompletedOnboarding?: boolean; hasTakenDiagnostic?: boolean } })?.user
+
+      if (token) {
+        localStorage.setItem('token', token)
+      }
+
+      setStatus('Registration successful!')
+
+      // Existing accounts that already finished onboarding + diagnostic skip
+      // straight to the syllabus. New accounts go through onboarding first.
+      if (!user?.hasCompletedOnboarding) {
+        navigate({ to: '/onboarding' })
+        return
+      }
+
+      navigate({ to: user.hasTakenDiagnostic ? '/syllabus' : '/diagnostic' })
+    } catch (error) {
+      setStatus(getRegisterErrorMessage(error))
+    }
   }
 
   return (

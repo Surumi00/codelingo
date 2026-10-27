@@ -48,15 +48,10 @@
 }
 
 .syllabus-brand-mark {
-  display: grid;
-  place-items: center;
-  width: 23px;
-  height: 23px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ffffff, #d9d0ff 52%, #a57ef8 100%);
-  color: #100b18;
-  font-size: 0.9rem;
-  box-shadow: inset 0 0 0 1px rgba(12, 8, 18, 0.12);
+  display: block;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
 }
 
 .syllabus-nav {
@@ -668,71 +663,6 @@
   cursor: pointer;
 }
 
-.syllabus-mascot {
-  position: absolute;
-  right: 46px;
-  bottom: 56px;
-  width: 110px;
-  height: 110px;
-  pointer-events: none;
-}
-
-.syllabus-mascot-body {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 52% 52% 48% 48%;
-  background: linear-gradient(180deg, #e7d7f8, #d0b5f4);
-  box-shadow: inset 0 0 0 2px rgba(137, 95, 190, 0.2);
-}
-
-.syllabus-mascot-body::before,
-.syllabus-mascot-body::after {
-  content: "";
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
-  top: 18px;
-}
-
-.syllabus-mascot-body::before {
-  left: 24px;
-}
-
-.syllabus-mascot-body::after {
-  right: 24px;
-}
-
-.syllabus-mascot-eye {
-  position: absolute;
-  top: 42px;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: #2d2039;
-}
-
-.syllabus-mascot-eye:first-of-type {
-  left: 30px;
-}
-
-.syllabus-mascot-eye:last-of-type {
-  right: 30px;
-}
-
-.syllabus-mascot-mouth {
-  position: absolute;
-  width: 20px;
-  height: 12px;
-  left: 50%;
-  bottom: 28px;
-  transform: translateX(-50%);
-  border-bottom: 4px solid #ec6d93;
-  border-radius: 0 0 12px 12px;
-}
-
 .syllabus-loading,
 .syllabus-state-card {
   display: flex;
@@ -821,10 +751,6 @@
   .syllabus-start-button {
     position: static;
     transform: none;
-  }
-
-  .syllabus-mascot {
-    display: none;
   }
 }
 

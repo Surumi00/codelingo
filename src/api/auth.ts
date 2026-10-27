@@ -1,4 +1,5 @@
 import api from './client'
+import { useMock } from '../lib/use-mock'
 import {
   mockGetMe,
   mockLogin,
@@ -31,19 +32,17 @@ export type RegisterInput = {
   password: string
 }
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
-
 export function login(input: LoginInput): Promise<LoginResponse> {
-  if (USE_MOCK) {
-    return mockLogin()
+  if (useMock()) {
+    return mockLogin(input)
   }
 
   return api.post<LoginResponse>('/auth/login', input).then((response) => response.data)
 }
 
 export function register(input: RegisterInput): Promise<unknown> {
-  if (USE_MOCK) {
-    return mockRegister()
+  if (useMock()) {
+    return mockRegister(input)
   }
 
   return api.post('/auth/register', input).then((response) => response.data)
@@ -52,7 +51,7 @@ export function register(input: RegisterInput): Promise<unknown> {
 // The backend response shape is intentionally loose; the profile page
 // normalizes it (`data.user ?? data ?? {}`).
 export function getMe(): Promise<any> {
-  if (USE_MOCK) {
+  if (useMock()) {
     return mockGetMe()
   }
 

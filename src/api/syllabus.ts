@@ -1,12 +1,11 @@
 import api from './client'
+import { useMock } from '../lib/use-mock'
 import { mockGetSyllabus } from '../mocks/syllabus-mock'
 
 // The syllabus payload is intentionally loose; the syllabus feature
 // normalizes it into typed levels.
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
-
 export function getSyllabus(): Promise<any> {
-  if (USE_MOCK) {
+  if (useMock()) {
     return mockGetSyllabus()
   }
 

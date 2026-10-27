@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import hiMascot from '../../../assets/characters/hi.png'
 import { useProgress } from '../../progress/use-progress'
 import { getSyllabusLevels } from '../api/get-syllabus'
 import type {
@@ -244,7 +245,7 @@ function SyllabusSidebar({
   return (
     <aside className="syllabus-sidebar">
       <div className="syllabus-brand">
-        <div className="syllabus-brand-mark">◉</div>
+        <img className="syllabus-brand-mark" src={hiMascot} alt="" />
         <span>CodeLingo</span>
       </div>
 
@@ -656,14 +657,6 @@ export function SyllabusPage() {
           )}
         </div>
       </section>
-
-      <div className="syllabus-mascot" aria-hidden="true">
-        <div className="syllabus-mascot-body">
-          <span className="syllabus-mascot-eye" />
-          <span className="syllabus-mascot-eye" />
-          <span className="syllabus-mascot-mouth" />
-        </div>
-      </div>
     </main>
   )
 }

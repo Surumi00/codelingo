@@ -1,4 +1,5 @@
 import api from './client'
+import { useMock } from '../lib/use-mock'
 import {
   mockCheckExercise,
   mockCompleteLesson,
@@ -6,8 +7,6 @@ import {
   mockGetProgress,
   mockStartLesson,
 } from '../mocks/lesson-mock'
-
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 export type ExerciseType =
   | 'MULTIPLE_CHOICE'
@@ -105,7 +104,7 @@ export type UserProgress = {
 }
 
 export function getLesson(lessonId: string): Promise<LessonDetail> {
-  if (USE_MOCK) {
+  if (useMock()) {
     return mockGetLesson(lessonId)
   }
 
@@ -113,7 +112,7 @@ export function getLesson(lessonId: string): Promise<LessonDetail> {
 }
 
 export function startLesson(lessonId: string): Promise<StartLessonResponse> {
-  if (USE_MOCK) {
+  if (useMock()) {
     return mockStartLesson(lessonId)
   }
 
@@ -127,7 +126,7 @@ export function checkExercise(
   sessionId: string,
   answer: ExerciseAnswer,
 ): Promise<CheckExerciseResponse> {
-  if (USE_MOCK) {
+  if (useMock()) {
     return mockCheckExercise(exerciseId, sessionId, answer)
   }
 
@@ -140,7 +139,7 @@ export function completeLesson(
   lessonId: string,
   sessionId: string,
 ): Promise<CompleteLessonResponse> {
-  if (USE_MOCK) {
+  if (useMock()) {
     return mockCompleteLesson(lessonId, sessionId)
   }
 
@@ -150,7 +149,7 @@ export function completeLesson(
 }
 
 export function getProgress(): Promise<UserProgress> {
-  if (USE_MOCK) {
+  if (useMock()) {
     return mockGetProgress()
   }
 
