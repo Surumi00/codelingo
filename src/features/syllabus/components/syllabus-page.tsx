@@ -1,6 +1,5 @@
 import { useLocation, useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import hiMascot from '../../../assets/characters/hi.png'
 import { useProgress } from '../../progress/use-progress'
 import { getSyllabusLevels } from '../api/get-syllabus'
 import type {
@@ -245,7 +244,7 @@ function SyllabusSidebar({
   return (
     <aside className="syllabus-sidebar">
       <div className="syllabus-brand">
-        <img className="syllabus-brand-mark" src={hiMascot} alt="" />
+        <div className="syllabus-brand-mark">◉</div>
         <span>CodeLingo</span>
       </div>
 
@@ -387,12 +386,9 @@ export function SyllabusPage() {
 
   const activeTopicConcepts = activeTopic?.concepts ?? []
 
-  // Continue follows the level the learner is looking at (the selected tab,
-  // falling back to the recommended level), so Intermediate/Advanced tabs
-  // start a lesson from their own syllabus instead of the recommended one.
   const nextLesson = useMemo(() => {
-    const preferred = activeLevel
-      ? getLevelLessons(activeLevel).find((lesson) => lesson.status === 'AVAILABLE')
+    const preferred = recommendedLevel
+      ? getLevelLessons(recommendedLevel).find((lesson) => lesson.status === 'AVAILABLE')
       : null
 
     return (
@@ -402,7 +398,7 @@ export function SyllabusPage() {
       ) ??
       null
     )
-  }, [levels, activeLevel])
+  }, [levels, recommendedLevel])
 
   const topicNextLesson = getNextLesson(activeTopicConcepts)
 
@@ -657,6 +653,7 @@ export function SyllabusPage() {
           )}
         </div>
       </section>
-    </main>
+
+      </main>
   )
 }

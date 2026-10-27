@@ -1,0 +1,196 @@
+/* CodeLingo mascot bot: floating chat trigger, bottom-right corner.
+   Pure CSS animation. Colors fall back to the app's dark theme tokens. */
+
+.mascot-bot {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right, 0px));
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+.mascot-bot > * { pointer-events: auto; }
+
+/* Speech bubble */
+.mascot-bubble {
+  position: relative;
+  max-width: 230px;
+  padding: 10px 32px 10px 14px;
+  background: var(--surface, #0d0a14);
+  color: var(--text-strong, #f7f4ff);
+  border: 1px solid var(--border, #292335);
+  border-radius: 14px 14px 4px 14px;
+  font: 500 14px/1.4 "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+  transform-origin: bottom right;
+  animation: bubble-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+.mascot-bubble[hidden] { display: none; }
+.mascot-bubble-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text, #aaa2bd);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.mascot-bubble-close:hover { color: var(--text-strong, #f7f4ff); background: rgba(255, 255, 255, 0.08); }
+
+/* The clickable mascot */
+.mascot-btn {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: bot-enter 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  transition: transform 0.15s ease;
+}
+.mascot-btn:active { transform: scale(0.93); }
+.mascot-btn:focus-visible {
+  outline: 3px solid var(--accent, #8c4ff2);
+  outline-offset: 5px;
+  border-radius: 50%;
+}
+
+.mascot-body {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 90%;
+  animation: bot-float 3.4s ease-in-out infinite;
+}
+.mascot-btn:hover .mascot-body,
+.mascot-btn:focus-visible .mascot-body {
+  animation: bot-wiggle 0.8s ease-in-out infinite;
+}
+.mascot-bot[data-mood="celebrate"] .mascot-body { animation: bot-jump 0.85s ease-in-out 3; }
+.mascot-bot[data-mood="sad"] .mascot-body { animation: bot-sad 4s ease-in-out infinite; }
+
+/* One image per mood, cross-faded */
+.mascot-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+.mascot-img.is-active { opacity: 1; }
+
+/* Soft ground shadow that shrinks as the ghost rises */
+.mascot-shadow {
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: -8px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(140, 79, 242, 0.4);
+  filter: blur(4px);
+  animation: bot-shadow 3.4s ease-in-out infinite;
+}
+.mascot-bot[data-mood="celebrate"] .mascot-shadow { animation: bot-shadow 0.85s ease-in-out 3; }
+
+/* Unread dot */
+.mascot-badge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff5d8f;
+  border: 2px solid var(--bg, #09070f);
+}
+.mascot-badge::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2px solid #ff5d8f;
+  animation: badge-pulse 1.8s ease-out infinite;
+}
+.mascot-badge[hidden] { display: none; }
+
+/* Confetti burst for the celebrate mood */
+.mascot-confetti {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.confetti-piece {
+  position: absolute;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--c);
+  animation: confetti-burst 1.1s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes bot-enter {
+  from { opacity: 0; transform: translateY(48px) scale(0.4); }
+  60% { opacity: 1; transform: translateY(-8px) scale(1.08); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes bot-float {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50% { transform: translateY(-9px) rotate(1.5deg); }
+}
+@keyframes bot-shadow {
+  0%, 100% { transform: scaleX(1); opacity: 0.9; }
+  50% { transform: scaleX(0.75); opacity: 0.45; }
+}
+@keyframes bot-wiggle {
+  0%, 100% { transform: translateY(-4px) rotate(0) scale(1.08); }
+  25% { transform: translateY(-4px) rotate(-7deg) scale(1.08); }
+  75% { transform: translateY(-4px) rotate(7deg) scale(1.08); }
+}
+@keyframes bot-jump {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  15% { transform: translateY(0) scale(1.1, 0.88); }
+  45% { transform: translateY(-28px) scale(0.94, 1.08); }
+  75% { transform: translateY(0) scale(1.08, 0.92); }
+}
+@keyframes bot-sad {
+  0%, 100% { transform: translateY(2px) rotate(-3deg); }
+  50% { transform: translateY(5px) rotate(-1deg); }
+}
+@keyframes bubble-in {
+  from { opacity: 0; transform: scale(0.6) translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes badge-pulse {
+  from { transform: scale(1); opacity: 0.8; }
+  to { transform: scale(2.2); opacity: 0; }
+}
+@keyframes confetti-burst {
+  from { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
+  to { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-btn, .mascot-body, .mascot-shadow, .mascot-bubble, .mascot-badge::after { animation: none !important; }
+  .mascot-confetti { display: none; }
+}
