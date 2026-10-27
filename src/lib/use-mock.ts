@@ -1,10 +1,7 @@
 /**
  * Whether to use mock API implementations instead of the real backend.
  *
- * Defaults to true so the app works out of the box without any `.env` file.
- * Override at runtime from DevTools console:
- *   localStorage.setItem('codelingo_use_mock', 'false')  // use real backend
- *   localStorage.setItem('codelingo_use_mock', 'true')   // force mock mode
+ * Defaults to false to use real backend.
  */
 export function useMock(): boolean {
   if (typeof localStorage !== 'undefined') {
@@ -15,5 +12,5 @@ export function useMock(): boolean {
     }
   }
 
-  return true
+  return false
 }
